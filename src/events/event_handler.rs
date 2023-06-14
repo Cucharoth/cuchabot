@@ -33,8 +33,8 @@ pub async fn event_handler(
                     new_message.channel_id.say(&ctx, pingpong()).await?;
                 }
 
-                //chatgpt shinanigans
-
+                //----------chatgpt shenanigans
+                //message in thread check
                 if new_message.channel_id.to_channel(&ctx).await?.guild().expect("Did not find guild").kind == ChannelType::PublicThread {
                     let mut is_first_message = false;
                     {
@@ -44,7 +44,6 @@ pub async fn event_handler(
                             is_first_message = true;
                         }
                     }
-
 
                     println!("message is in a thread");
                     println!("thread id: {}", new_message.channel_id);
@@ -74,6 +73,7 @@ pub async fn event_handler(
                     }
                 }
 
+                //bot message filter and thread builder
                 if new_message.content.len() > 25 {
                     let mensage_cropped = &new_message.content[11..19];
                     if mensage_cropped == "tell me:" {
@@ -92,9 +92,7 @@ pub async fn event_handler(
                                      ChatGptBuilder::new(imput, &data, u64::from(new_message.id), false).await?
                                  }).await?;
 
-
                         println!("message id: {}", new_message.id);
-
 
                         //let chat_gpt = chatgpt_builder::ChatGptBuilder::new(imput).await;
                         /*if let Ok(mensage) = ChatGptBuilder::new(imput).await {
@@ -109,7 +107,21 @@ pub async fn event_handler(
             println!("thread update!")
         }
 
+        poise::Event::ThreadCreate {thread} => {
+            println!("thread created!")
+        }
+
+        poise::Event::ThreadDelete {thread} => {
+            println!("thread deleted id: {}", thread.id);
+            {
+                let mut hash_map = data.discord_thread_info.lock().unwrap();
+                hash_map.remove(&u64::from(thread.id));
+            }
+        }
+
         _ => {},
+
+
 
 
     }

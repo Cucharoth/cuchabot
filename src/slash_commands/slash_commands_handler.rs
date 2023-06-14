@@ -21,7 +21,11 @@ pub struct Data {
 pub async fn reset(
     ctx: Context<'_>
 ) -> Result<(), Error> {
-    ChatGptBuilder::reset();
+    //ChatGptBuilder::reset();
+    {
+        let mut hash_map = ctx.data().discord_thread_info.lock().unwrap();
+        hash_map.clear()
+    }
     ctx.say("OK!, I've forgotten everything! @_@, bip bop").await?;
     Ok(())
 }

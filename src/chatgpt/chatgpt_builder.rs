@@ -16,6 +16,7 @@ pub struct ChatGptBuilder;
 impl ChatGptBuilder {
     pub async fn new(imput: &str, data: &Data, source_id: u64, is_thread: bool) -> Result<(String)> {
         dotenv().ok();
+        //chatgpt client builder
         let key = env::var("CHATGPT_KEY").expect("key not found");
         let client = ChatGPT::new_with_config(
             key,
@@ -25,16 +26,11 @@ impl ChatGptBuilder {
                 .build()
                 .unwrap(),
         )?;
+
+        //keeping conversation with Json
         /*let mut restored = client
             .restore_conversation_json("my_conversation.json")
             .await?;*/
-        //let mut conversation: Conversation = Conversation::new_with_history(client, restored.history);
-        //Conversation::new_with_history(client, client.restore_conversation_json("my_conversation.json")).await?;
-        //let mut conversation: Conversation = client.new_conversation();
-        //let direction = "You are CuchaBot a Discord bot. Answer as concisely as possible";
-        //let mut conversation: Conversation = client.new_conversation_directed(direction);
-
-        //keeping conversation with Json
         /*let text = std::fs::read_to_string("my_conversation.json").unwrap();
         let mut conversation: Conversation = if text == "" {
             let direction = "You are CuchaBot a Discord bot. Answer as concisely as possible";
@@ -51,7 +47,7 @@ impl ChatGptBuilder {
         conversation.save_history_json("my_conversation.json").await?;
         */
 
-        //let response: CompletionResponse =
+
         //keeping conversation with discord thread
         let response: CompletionResponse = if is_thread {
             let mut conversation: Conversation = {
@@ -60,22 +56,16 @@ impl ChatGptBuilder {
                 let conversation_aux = Conversation::new_with_history(client, conversation.history.clone());
                 conversation_aux
             };
-
-
-
             let response: CompletionResponse = conversation
                 .send_message(imput)
                 .await?;
-
             response
         } else {
             let direction = "You are CuchaBot a Discord bot. Answer as concisely as possible";
             let mut conversation: Conversation = client.new_conversation_directed(direction);
-
             let response: CompletionResponse = conversation
                 .send_message(imput)
                 .await?;
-
             {
                 let mut hash_map = data.discord_thread_info.lock().unwrap();
                 hash_map.insert(source_id, conversation);
@@ -83,12 +73,8 @@ impl ChatGptBuilder {
             response
         };
 
-
-
-
         println!("Response: {}", response.message().content);
         let respuesta = &response.message().content;
-
 
         Ok(respuesta.to_string())
 
