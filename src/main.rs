@@ -36,7 +36,7 @@ use poise::serenity_prelude::{GatewayIntents};
 //fix here in case Error's wrong
 use prelude::*;
 use crate::event_handler::event_handler;
-use crate::slash_commands::slash_commands_handler::{age, Data, reset, tiburonsin};
+use crate::slash_commands::slash_commands_handler::{about, age, Data, reset, tiburonsin, commands};
 //use crate::commands::commands_handler::GENERAL_GROUP;
 //use crate::slash_commands::slash_commands_handler::*;
 
@@ -52,7 +52,9 @@ async fn main() {
                 //todo: commands here
                 age(),
                 tiburonsin(),
-                reset()
+                reset(),
+                about(),
+                commands(),
             ],
             event_handler: |ctx, event, framework, data|
                 Box::pin(event_handler(ctx, event, framework, data)),
