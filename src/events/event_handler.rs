@@ -1,20 +1,10 @@
-use std::hash::Hasher;
 use crate::chatgpt_builder::ChatGptBuilder;
-use std::io::Write;
-use std::ops::Deref;
-use std::ptr::hash;
-use std::sync::mpsc::channel;
-use chatgpt::converse::Conversation;
-use poise::futures_util::future::err;
-use poise::serenity_prelude;
-use poise::serenity_prelude::{ChannelType, CreateThread, MessageId};
-use poise::serenity_prelude::Mention::Channel;
+use poise::serenity_prelude::{ChannelType};
 use crate::prelude::*;
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
 use crate::Data;
-
 
 pub async fn event_handler(
     ctx: &serenity::Context,
@@ -48,7 +38,7 @@ pub async fn event_handler(
                     println!("message is in a thread");
                     println!("thread id: {}", new_message.channel_id);
                     {
-                        for (key, value) in data.discord_thread_info.lock().unwrap().iter() {
+                        for (key, _value) in data.discord_thread_info.lock().unwrap().iter() {
                             println!("channel id: {}", key);
                         }
                         let first_message = data.first_message.lock().unwrap().to_string();
@@ -60,7 +50,7 @@ pub async fn event_handler(
                         let mut conversation_exist = false;
                         {
                             let key_value = u64::from(new_message.channel_id);
-                            if let Some(value) = data.discord_thread_info.lock().unwrap().get(&key_value) {
+                            if let Some(_value) = data.discord_thread_info.lock().unwrap().get(&key_value) {
                                 conversation_exist = true;
                             }
                         }
@@ -103,11 +93,11 @@ pub async fn event_handler(
             }
         }
 
-        poise::Event::ThreadUpdate {thread} => {
+        poise::Event::ThreadUpdate {thread: _} => {
             println!("thread update!")
         }
 
-        poise::Event::ThreadCreate {thread} => {
+        poise::Event::ThreadCreate {thread: _} => {
             println!("thread created!")
         }
 

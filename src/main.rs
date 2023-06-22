@@ -2,6 +2,7 @@ mod events;
 mod commands;
 mod slash_commands;
 mod chatgpt;
+mod scraping;
 
 mod prelude{
     //pub use serenity::async_trait;
@@ -11,6 +12,7 @@ mod prelude{
     //pub use serenity::framework::standard::{StandardFramework, CommandResult};
     //pub use serenity::model::gateway::Ready;
     //pub use serenity::utils::Content;
+    pub use crate::scraping::*;
     pub use crate::events::*;
     pub use crate::chatgpt::*;
     pub use poise::serenity_prelude;
@@ -36,7 +38,7 @@ use poise::serenity_prelude::{GatewayIntents};
 //fix here in case Error's wrong
 use prelude::*;
 use crate::event_handler::event_handler;
-use crate::slash_commands::slash_commands_handler::{about, age, Data, reset, tiburonsin, commands};
+use crate::slash_commands::slash_commands_handler::{about, age, Data, reset, tiburonsin, commands, mythicweek};
 //use crate::commands::commands_handler::GENERAL_GROUP;
 //use crate::slash_commands::slash_commands_handler::*;
 
@@ -55,6 +57,7 @@ async fn main() {
                 reset(),
                 about(),
                 commands(),
+                mythicweek(),
             ],
             event_handler: |ctx, event, framework, data|
                 Box::pin(event_handler(ctx, event, framework, data)),

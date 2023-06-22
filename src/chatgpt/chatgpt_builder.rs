@@ -2,7 +2,6 @@ use crate::prelude::*;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Write;
-use serde_json::Deserializer;
 pub use chatgpt::prelude::*;
 pub use chatgpt::types::CompletionResponse;
 //use poise::serenity_prelude::AttachmentType::File;
