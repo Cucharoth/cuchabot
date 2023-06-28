@@ -52,8 +52,8 @@ impl ChatGptBuilder {
             let mut conversation: Conversation = {
                 let mut hash_map = data.discord_thread_info.lock().unwrap();
                 let conversation: &Conversation = hash_map.get_mut(&source_id).expect("Did not find id inside discord_thread_info");
-                let conversation_aux = Conversation::new_with_history(client, conversation.history.clone());
-                conversation_aux
+                let conversation_clone = Conversation::new_with_history(client, conversation.history.clone());
+                conversation_clone
             };
             let response: CompletionResponse = conversation
                 .send_message(imput)

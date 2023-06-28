@@ -24,7 +24,7 @@ pub struct Data {
 pub async fn mythicweek(
     ctx: Context<'_>
 ) -> Result<(), Error> {
-    let response = scraping_builder::ScraperBuiler::subcreation_weekly_affix().await?;
+    let response = scraping_builder::ScraperBuilder::subcreation_weekly_affix().await?;
     ctx.say(response).await?;
 
     Ok(())
@@ -39,6 +39,7 @@ pub async fn about(
     let source_link = "https://github.com/Cucharoth/cuchabot_local.git";
     output.push_str("I'm CuchaBot, a discord bot. \nAsk me anything using this format:\n");
     output.push_str("hey cucha: tell me: [your_question]\n");
+    output.push_str("---(You do no need the format inside threads!)\n");
     output.push_str("You can also try some commands using the '~' prefix\nSource: ");
     output.push_str(source_link);
     ctx.say(output).await?;
@@ -54,7 +55,6 @@ pub async fn commands(
     output.push_str("You can use commands with the '~' prefix\nYou can also ask CuchaBot to use them for you with:\nhey cucha, [command]\n\n");
     for var in ctx.framework().options.commands.iter() {
         let string = format!("[{0}]: {1:width$} \n", var.name.to_string(), var.description.clone().unwrap().to_string(), width = 100 - var.name.to_string().len());
-        print!("{}", string);
         output.push_str(&string);
     }
     ctx.say(output).await?;

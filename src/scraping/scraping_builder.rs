@@ -1,8 +1,8 @@
 use scraper::Html;
 
-pub struct ScraperBuiler{}
+pub struct ScraperBuilder {}
 
-impl ScraperBuiler {
+impl ScraperBuilder {
     pub async fn subcreation_weekly_affix() -> Result<String, reqwest::Error>{
         let url = "https://mplus.subcreation.net";
         let response = reqwest::get(url).await?;

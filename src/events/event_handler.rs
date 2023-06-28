@@ -30,7 +30,7 @@ pub async fn event_handler(
                     {
                         let first_message = data.first_message.lock().unwrap().to_string();
                         if new_message.content == first_message {
-                            println!("is first message");
+                            //println!("is first message");
                             is_first_message = true;
                         }
                     }
