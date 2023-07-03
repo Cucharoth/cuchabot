@@ -14,10 +14,10 @@ type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
 
-pub struct Data {
+/*pub struct Data {
     pub(crate) discord_thread_info: Mutex<HashMap<u64, Conversation>>,
     pub first_message: Mutex<String>,
-}
+}*/
 
 ///Get the weekly world of warcraft mythic+ affix rotation
 #[poise::command(slash_command, prefix_command)]

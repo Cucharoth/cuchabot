@@ -6,14 +6,14 @@ pub use chatgpt::prelude::*;
 pub use chatgpt::types::CompletionResponse;
 //use poise::serenity_prelude::AttachmentType::File;
 use poise::serenity_prelude::json::prelude::to_string;
-use poise::serenity_prelude::MessageId;
+use poise::serenity_prelude::{MessageId, User};
 use crate::Data;
 
 
 pub struct ChatGptBuilder;
 
 impl ChatGptBuilder {
-    pub async fn new(imput: &str, data: &Data, source_id: u64, is_thread: bool) -> Result<(String)> {
+    pub async fn new(imput: &str, data: &Data, source_id: u64, user: &User,  is_thread: bool) -> Result<(String)> {
         dotenv().ok();
         //chatgpt client builder
         let key = env::var("CHATGPT_KEY").expect("key not found");
@@ -65,9 +65,13 @@ impl ChatGptBuilder {
             let response: CompletionResponse = conversation
                 .send_message(imput)
                 .await?;
-            {
+            /*{
                 let mut hash_map = data.discord_thread_info.lock().unwrap();
                 hash_map.insert(source_id, conversation);
+            }*/
+            {
+                let mut bst = data.tread_info_as_bst.lock().unwrap();
+                bst.insert(source_id, (user.clone(), conversation))
             }
             response
         };

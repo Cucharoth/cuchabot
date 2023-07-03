@@ -50,9 +50,10 @@ pub async fn event_handler(
                         let mut conversation_exist = false;
                         {
                             let key_value = u64::from(new_message.channel_id);
-                            if let Some(_value) = data.discord_thread_info.lock().unwrap().get(&key_value) {
+                            if let Some(_value) = data.thread_info_as_bst.lock().unwrap()
+                            /*if let Some(_value) = data.discord_thread_info.lock().unwrap().get(&key_value) {
                                 conversation_exist = true;
-                            }
+                            }*/
                         }
                         if conversation_exist {
                             let imput = &new_message.content;
@@ -79,7 +80,7 @@ pub async fn event_handler(
                             |b| b.name(&new_message.content[19..])).await?
                             .say(&ctx,
                                  {
-                                     ChatGptBuilder::new(imput, &data, u64::from(new_message.id), false).await?
+                                     ChatGptBuilder::new(imput, &data, u64::from(new_message.id), &new_message.author, false).await?
                                  }).await?;
 
                         println!("message id: {}", new_message.id);

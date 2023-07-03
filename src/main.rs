@@ -3,8 +3,9 @@ mod commands;
 mod slash_commands;
 mod chatgpt;
 mod scraping;
+mod data;
 
-mod prelude{
+pub mod prelude{
     //pub use serenity::async_trait;
     //pub use serenity::prelude::*;
     //pub use serenity::model::channel::Message;
@@ -23,6 +24,8 @@ mod prelude{
     pub use std::env;
     pub use std::sync::Mutex;
     pub use std::collections::HashMap;
+    pub use crate::data::data::*;
+    pub use crate::data::bst::BST;
     //pub use shuttle_secrets::SecretStore;
     //pub use shuttle_poise::ShuttlePoise;
     //pub use anyhow::Context as _;
@@ -36,7 +39,7 @@ use std::time::Duration;
 use poise::serenity_prelude::{GatewayIntents};
 //use shuttle_poise::ShuttlePoise;
 //fix here in case Error's wrong
-use prelude::*;
+use crate::prelude::*;
 use crate::event_handler::event_handler;
 use crate::slash_commands::slash_commands_handler::{about, age, Data, reset, tiburonsin, commands, mythicweek};
 //use crate::commands::commands_handler::GENERAL_GROUP;
@@ -80,6 +83,7 @@ async fn main() {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
                     discord_thread_info: Mutex::new(HashMap::new()),
+                    tread_info_as_bst: Mutex::new(BST::new()),
                     first_message: Mutex::new(String::new()),
                 })
             })
