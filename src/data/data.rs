@@ -5,6 +5,6 @@ use crate::prelude::*;
 
 pub struct Data {
     pub(crate) discord_thread_info: Mutex<HashMap<u64, Conversation>>,
-    pub tread_info_as_bst: Mutex<BST<(User, Conversation)>>,
+    pub thread_info_as_bst: Mutex<BST<(User, Conversation)>>,
     pub first_message: Mutex<String>,
 }

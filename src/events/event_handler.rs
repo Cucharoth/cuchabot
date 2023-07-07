@@ -50,14 +50,16 @@ pub async fn event_handler(
                         let mut conversation_exist = false;
                         {
                             let key_value = u64::from(new_message.channel_id);
-                            if let Some(_value) = data.thread_info_as_bst.lock().unwrap()
+                            if let Some(_value) = data.thread_info_as_bst.lock().unwrap().get_by_key(key_value){
+                                conversation_exist = true;
+                            }
                             /*if let Some(_value) = data.discord_thread_info.lock().unwrap().get(&key_value) {
                                 conversation_exist = true;
                             }*/
                         }
                         if conversation_exist {
                             let imput = &new_message.content;
-                            if let Ok(message) = ChatGptBuilder::new(imput, &data, u64::from(new_message.channel_id), true).await {
+                            if let Ok(message) = ChatGptBuilder::new(imput, &data, u64::from(new_message.channel_id), &new_message.author, true).await {
                                 new_message.channel_id.say(&ctx, message).await?;
                             }
                         }
@@ -80,7 +82,15 @@ pub async fn event_handler(
                             |b| b.name(&new_message.content[19..])).await?
                             .say(&ctx,
                                  {
-                                     ChatGptBuilder::new(imput, &data, u64::from(new_message.id), &new_message.author, false).await?
+                                     ChatGptBuilder::new(
+                                         imput,
+                                         &data,
+                                         u64::from(new_message.id),
+                                         &new_message.author,
+                                         false
+                                     )
+                                         .await
+                                         .expect("Cannot create chatgpt client, likely quota")
                                  }).await?;
 
                         println!("message id: {}", new_message.id);
@@ -105,8 +115,12 @@ pub async fn event_handler(
         poise::Event::ThreadDelete {thread} => {
             println!("thread deleted id: {}", thread.id);
             {
-                let mut hash_map = data.discord_thread_info.lock().unwrap();
-                hash_map.remove(&u64::from(thread.id));
+                //todo! change to tree
+                /*let mut hash_map = data.discord_thread_info.lock().unwrap();
+                hash_map.remove(&u64::from(thread.id));*/
+                let key = thread.id; //threads ID correspond to the original message ID
+                let mut bst = data.thread_info_as_bst.lock().unwrap();
+                bst.delete_by_key(u64::from(key));
             }
         }
 

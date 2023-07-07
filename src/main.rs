@@ -41,7 +41,7 @@ use poise::serenity_prelude::{GatewayIntents};
 //fix here in case Error's wrong
 use crate::prelude::*;
 use crate::event_handler::event_handler;
-use crate::slash_commands::slash_commands_handler::{about, age, Data, reset, tiburonsin, commands, mythicweek};
+use crate::slash_commands::slash_commands_handler::{about, age, reset, tiburonsin, commands, mythicweek};
 //use crate::commands::commands_handler::GENERAL_GROUP;
 //use crate::slash_commands::slash_commands_handler::*;
 
@@ -83,7 +83,7 @@ async fn main() {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
                     discord_thread_info: Mutex::new(HashMap::new()),
-                    tread_info_as_bst: Mutex::new(BST::new()),
+                    thread_info_as_bst: Mutex::new(BST::new()),
                     first_message: Mutex::new(String::new()),
                 })
             })
