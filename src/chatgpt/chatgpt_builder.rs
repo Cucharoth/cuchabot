@@ -1,11 +1,9 @@
-use std::borrow::Borrow;
 use crate::prelude::*;
 use std::fs::{File, OpenOptions};
 use std::io;
-use std::io::{BufRead, BufReader, BufWriter};
 use std::io::Write;
+use std::io::{BufRead, BufReader, BufWriter};
 use std::path::Path;
-use std::rc::Rc;
 use std::sync::Arc;
 pub use chatgpt::prelude::*;
 pub use chatgpt::types::CompletionResponse;
@@ -34,11 +32,6 @@ impl ChatGptBuilder {
         //keeping conversation with discord thread
         let response: CompletionResponse = if is_thread {
             let mut conversation: Conversation = {
-                /*
-                let mut hash_map = data.discord_thread_info.lock().unwrap();
-                let conversation: &Conversation = hash_map.get_mut(&source_id).expect("Did not find id inside discord_thread_info");
-                let conversation_clone = Conversation::new_with_history(client, conversation.history.clone());
-                conversation_clone*/
                 let mut bst = data.thread_info_as_bst.lock().unwrap();
                 let data_tuple: Arc<(User, Conversation)> = bst.get_by_key(source_id).expect("Did not find ID inside bst");
                 let conversation = &data_tuple.1;
@@ -55,10 +48,6 @@ impl ChatGptBuilder {
             let response: CompletionResponse = conversation
                 .send_message(imput)
                 .await?;
-            /*{
-                let mut hash_map = data.discord_thread_info.lock().unwrap();
-                hash_map.insert(source_id, conversation);
-            }*/
             {
                 let mut bst = data.thread_info_as_bst.lock().unwrap();
                 bst.insert(source_id, (user.clone(), conversation))
@@ -111,7 +100,7 @@ impl ChatGptBuilder {
                     }
                 }
             },
-            Err(error) => panic!("No se pudo acceder al archivo!"),
+            Err(_error) => panic!("No se pudo acceder al archivo!"),
         }
     }
 
@@ -122,6 +111,6 @@ impl ChatGptBuilder {
     }
 
     pub fn reset(){
-        if let Ok(mut file) = File::create("my_conversation.json") {}
+        if let Ok(_file) = File::create("my_conversation.json") {}
     }
 }

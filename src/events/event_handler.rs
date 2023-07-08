@@ -28,26 +28,10 @@ pub async fn event_handler(
                 {
                     //message in thread check
                     if new_message.channel_id.to_channel(&ctx).await?.guild().expect("Did not find guild").kind == ChannelType::PublicThread {
-                        let mut is_first_message = false;
-                        {
-                            let first_message = data.first_message.lock().unwrap().to_string();
-                            if new_message.content == first_message {
-                                //println!("is first message");
-                                is_first_message = true;
-                            }
-                        }
 
                         println!("message is in a thread");
                         println!("thread id: {}", new_message.channel_id);
-                        /*{
-                        for (key, _value) in data.discord_thread_info.lock().unwrap().iter() {
-                            println!("channel id: {}", key);
-                        }
-                        let first_message = data.first_message.lock().unwrap().to_string();
-                        println!("first message is: {}", first_message);
-                        }*/
 
-                        //if !is_first_message {
                         //lock workaround
                         let mut conversation_exist = false;
                         {
@@ -55,9 +39,6 @@ pub async fn event_handler(
                             if let Some(_value) = data.thread_info_as_bst.lock().unwrap().get_by_key(key_value) {
                                 conversation_exist = true;
                             }
-                            /*if let Some(_value) = data.discord_thread_info.lock().unwrap().get(&key_value) {
-                                conversation_exist = true;
-                            }*/
                         }
                         if conversation_exist {
                             let imput = &new_message.content;
@@ -72,7 +53,6 @@ pub async fn event_handler(
                                 new_message.channel_id.say(&ctx, message).await?;
                             }
                         }
-                        //}
                     }
 
 
@@ -104,11 +84,6 @@ pub async fn event_handler(
                                      }).await?;
 
                             println!("message id: {}", new_message.id);
-
-                            //let chat_gpt = chatgpt_builder::ChatGptBuilder::new(imput).await;
-                            /*if let Ok(mensage) = ChatGptBuilder::new(imput).await {
-                        new_message.channel_id.say(&ctx, mensage).await?;
-                    }*/
                         }
                     }
                 }
@@ -138,8 +113,6 @@ pub async fn event_handler(
         poise::Event::ThreadDelete {thread} => {
             println!("thread deleted id: {}", thread.id);
             {
-                /*let mut hash_map = data.discord_thread_info.lock().unwrap();
-                hash_map.remove(&u64::from(thread.id));*/
                 let key = thread.id; //threads ID correspond to the original message ID
                 let mut bst = data.thread_info_as_bst.lock().unwrap();
                 bst.delete_by_key(u64::from(key));
@@ -155,11 +128,6 @@ pub async fn event_handler(
     Ok(())
 
 }
-
-/*fn asking_chat_gpt(imput: &str) -> String {
-    let respuesta = ChatGptBuilder::new(imput).expect("Error al crear chatGPT cliente");
-    respuesta
-}*/
 
 fn pingpong() -> String{
     let respuesta = String::from("pong!");

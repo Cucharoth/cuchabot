@@ -1,24 +1,14 @@
-use std::collections::HashMap;
 use std::sync::Mutex;
 use std::thread::Builder;
-use chatgpt::converse::Conversation;
-use crate::prelude::*;
 use poise::serenity_prelude;
 use poise::serenity_prelude::EntityType::Str;
-use crate::chatgpt_builder::ChatGptBuilder;
 use poise::serenity_prelude::MessageId;
+use crate::chatgpt_builder::ChatGptBuilder;
+use crate::prelude::*;
 
-
-
-//use crate::{Context, Error};
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
-
-/*pub struct Data {
-    pub(crate) discord_thread_info: Mutex<HashMap<u64, Conversation>>,
-    pub first_message: Mutex<String>,
-}*/
 
 ///reverses your text!
 #[poise::command(slash_command)]
@@ -80,7 +70,6 @@ pub async fn commands(
 pub async fn reset(
     ctx: Context<'_>
 ) -> Result<(), Error> {
-    //ChatGptBuilder::reset();
     {
         let mut bst = ctx.data().thread_info_as_bst.lock().unwrap();
         bst.clear()
