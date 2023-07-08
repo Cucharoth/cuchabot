@@ -97,7 +97,6 @@ impl<T> BST<T> {
             let root_mut_ref = Arc::clone(root);
             let result_search = Self::impl_get_by_key(root_mut_ref, key);
             if let Some(node) = result_search {
-                //let mut node_ref = node.borrow_mut();
                 node.write().unwrap().data = Arc::new(value);
                 return Some(());
             }

@@ -26,6 +26,7 @@ pub mod prelude{
     pub use std::collections::HashMap;
     pub use crate::data::data::*;
     pub use crate::data::bst::BST;
+    pub use crate::data::stack::*;
     //pub use shuttle_secrets::SecretStore;
     //pub use shuttle_poise::ShuttlePoise;
     //pub use anyhow::Context as _;
@@ -34,6 +35,7 @@ pub mod prelude{
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
+use std::fs::File;
 use dotenv::{dotenv, var};
 use std::time::Duration;
 use poise::serenity_prelude::{GatewayIntents};
@@ -41,14 +43,14 @@ use poise::serenity_prelude::{GatewayIntents};
 //fix here in case Error's wrong
 use crate::prelude::*;
 use crate::event_handler::event_handler;
-use crate::slash_commands::slash_commands_handler::{about, age, reset, tiburonsin, commands, mythicweek};
+use crate::slash_commands::slash_commands_handler::{about, age, reset, tiburonsin, commands, mythicweek, reverse};
 //use crate::commands::commands_handler::GENERAL_GROUP;
 //use crate::slash_commands::slash_commands_handler::*;
 
 
 #[tokio::main]
 async fn main() {
-    chatgpt_builder::ChatGptBuilder::reset();
+    File::create("my_conversation.txt").expect("can't create log file");
     dotenv().ok();
     poise::Framework::builder()
         .token(env::var("TOKEN").expect("Missing 'TOKEN' env"))
@@ -61,6 +63,7 @@ async fn main() {
                 about(),
                 commands(),
                 mythicweek(),
+                reverse()
             ],
             event_handler: |ctx, event, framework, data|
                 Box::pin(event_handler(ctx, event, framework, data)),

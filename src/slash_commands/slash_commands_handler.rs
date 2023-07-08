@@ -9,6 +9,7 @@ use crate::chatgpt_builder::ChatGptBuilder;
 use poise::serenity_prelude::MessageId;
 
 
+
 //use crate::{Context, Error};
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
@@ -19,18 +20,30 @@ type Context<'a> = poise::Context<'a, Data, Error>;
     pub first_message: Mutex<String>,
 }*/
 
-///Get the weekly world of warcraft mythic+ affix rotation
+///reverses your text!
+#[poise::command(slash_command)]
+pub async fn reverse(
+    ctx: Context<'_>,
+    #[description = "Message send"] message: String,
+) -> Result<(), Error> {
+    let response: String = Stack::<String>::invertir_frase(&message);
+    ctx.say(response).await?;
+    Ok(())
+}
+
+///Get the weekly world of warcraft mythic+ affix rotation.
 #[poise::command(slash_command, prefix_command)]
 pub async fn mythicweek(
     ctx: Context<'_>
 ) -> Result<(), Error> {
-    let response = scraping_builder::ScraperBuilder::subcreation_weekly_affix().await?;
+    let mut response = "The current World of Warcraft Mythic+ affix are: ".to_string();
+    response.push_str(&scraping_builder::ScraperBuilder::subcreation_weekly_affix().await?);
     ctx.say(response).await?;
 
     Ok(())
 }
 
-///About section
+///About section.
 #[poise::command(slash_command, prefix_command)]
 pub async fn about(
     ctx: Context<'_>
@@ -46,7 +59,7 @@ pub async fn about(
     Ok(())
 }
 
-///Shows all the commands
+///Shows all the commands.
 #[poise::command(slash_command, prefix_command)]
 pub async fn commands(
     ctx: Context<'_>
@@ -62,15 +75,15 @@ pub async fn commands(
     Ok(())
 }
 
-///Clears all the "memory" data for Chatgpt module
+///Clears all the "memory" data for Chatgpt module.
 #[poise::command(slash_command, prefix_command)]
 pub async fn reset(
     ctx: Context<'_>
 ) -> Result<(), Error> {
     //ChatGptBuilder::reset();
     {
-        let mut hash_map = ctx.data().discord_thread_info.lock().unwrap();
-        hash_map.clear()
+        let mut bst = ctx.data().thread_info_as_bst.lock().unwrap();
+        bst.clear()
     }
     ctx.say("OK!, I've forgotten everything! @_@, bip bop").await?;
     Ok(())

@@ -17,40 +17,42 @@ pub async fn event_handler(
         poise::Event::GuildMemberAddition { new_member } => {
             println!("New member: {}", new_member.user.name);
         }
+
         poise::Event::Message{ new_message} => {
             if !new_message.author.bot {
-                if new_message.content == "!ping" {
+                if new_message.content == "ping" {
                     new_message.channel_id.say(&ctx, pingpong()).await?;
                 }
 
                 //----------chatgpt shenanigans
-                //message in thread check
-                if new_message.channel_id.to_channel(&ctx).await?.guild().expect("Did not find guild").kind == ChannelType::PublicThread {
-                    let mut is_first_message = false;
-                    {
-                        let first_message = data.first_message.lock().unwrap().to_string();
-                        if new_message.content == first_message {
-                            //println!("is first message");
-                            is_first_message = true;
+                {
+                    //message in thread check
+                    if new_message.channel_id.to_channel(&ctx).await?.guild().expect("Did not find guild").kind == ChannelType::PublicThread {
+                        let mut is_first_message = false;
+                        {
+                            let first_message = data.first_message.lock().unwrap().to_string();
+                            if new_message.content == first_message {
+                                //println!("is first message");
+                                is_first_message = true;
+                            }
                         }
-                    }
 
-                    println!("message is in a thread");
-                    println!("thread id: {}", new_message.channel_id);
-                    {
+                        println!("message is in a thread");
+                        println!("thread id: {}", new_message.channel_id);
+                        /*{
                         for (key, _value) in data.discord_thread_info.lock().unwrap().iter() {
                             println!("channel id: {}", key);
                         }
                         let first_message = data.first_message.lock().unwrap().to_string();
                         println!("first message is: {}", first_message);
-                    }
+                        }*/
 
-                    if !is_first_message {
+                        //if !is_first_message {
                         //lock workaround
                         let mut conversation_exist = false;
                         {
                             let key_value = u64::from(new_message.channel_id);
-                            if let Some(_value) = data.thread_info_as_bst.lock().unwrap().get_by_key(key_value){
+                            if let Some(_value) = data.thread_info_as_bst.lock().unwrap().get_by_key(key_value) {
                                 conversation_exist = true;
                             }
                             /*if let Some(_value) = data.discord_thread_info.lock().unwrap().get(&key_value) {
@@ -59,46 +61,67 @@ pub async fn event_handler(
                         }
                         if conversation_exist {
                             let imput = &new_message.content;
-                            if let Ok(message) = ChatGptBuilder::new(imput, &data, u64::from(new_message.channel_id), &new_message.author, true).await {
+                            if let Ok(message) = ChatGptBuilder::new(
+                                imput,
+                                &data,
+                                u64::from(new_message.channel_id),
+                                &new_message.author,
+                                true
+                            )
+                                .await {
                                 new_message.channel_id.say(&ctx, message).await?;
                             }
+                        }
+                        //}
+                    }
+
+
+                    //bot message filter and thread builder
+                    if new_message.content.len() > 25 {
+                        let mensage_cropped = &new_message.content[11..19];
+                        if mensage_cropped == "tell me:" {
+                            {
+                                let mut string = data.first_message.lock().unwrap();
+                                string.push_str(&new_message.content);
+                            }
+
+                            let imput = &new_message.content[19..];
+                            new_message.channel_id.create_public_thread(
+                                &ctx,
+                                new_message.id,
+                                |b| b.name(&new_message.content[19..])).await?
+                                .say(&ctx,
+                                     {
+                                         ChatGptBuilder::new(
+                                             imput,
+                                             &data,
+                                             u64::from(new_message.id),
+                                             &new_message.author,
+                                             false
+                                         )
+                                             .await
+                                             .expect("Cannot create chatgpt client, likely quota")
+                                     }).await?;
+
+                            println!("message id: {}", new_message.id);
+
+                            //let chat_gpt = chatgpt_builder::ChatGptBuilder::new(imput).await;
+                            /*if let Ok(mensage) = ChatGptBuilder::new(imput).await {
+                        new_message.channel_id.say(&ctx, mensage).await?;
+                    }*/
                         }
                     }
                 }
 
-                //bot message filter and thread builder
-                if new_message.content.len() > 25 {
-                    let mensage_cropped = &new_message.content[11..19];
-                    if mensage_cropped == "tell me:" {
-                        {
-                            let mut string = data.first_message.lock().unwrap();
-                            string.push_str(&new_message.content);
+                //dev section (keep at the end so we can delete the message safely)
+                {
+                    let dev_id = 218661386950148096;
+                    if new_message.author.id == dev_id {
+                        // threads logs:
+                        if new_message.content == "-threads log" {
+                            ChatGptBuilder::read_logs();
+                            new_message.delete(&ctx).await?;
                         }
-
-                        let imput = &new_message.content[19..];
-                        new_message.channel_id.create_public_thread(
-                            &ctx,
-                            new_message.id,
-                            |b| b.name(&new_message.content[19..])).await?
-                            .say(&ctx,
-                                 {
-                                     ChatGptBuilder::new(
-                                         imput,
-                                         &data,
-                                         u64::from(new_message.id),
-                                         &new_message.author,
-                                         false
-                                     )
-                                         .await
-                                         .expect("Cannot create chatgpt client, likely quota")
-                                 }).await?;
-
-                        println!("message id: {}", new_message.id);
-
-                        //let chat_gpt = chatgpt_builder::ChatGptBuilder::new(imput).await;
-                        /*if let Ok(mensage) = ChatGptBuilder::new(imput).await {
-                        new_message.channel_id.say(&ctx, mensage).await?;
-                    }*/
                     }
                 }
             }
@@ -115,7 +138,6 @@ pub async fn event_handler(
         poise::Event::ThreadDelete {thread} => {
             println!("thread deleted id: {}", thread.id);
             {
-                //todo! change to tree
                 /*let mut hash_map = data.discord_thread_info.lock().unwrap();
                 hash_map.remove(&u64::from(thread.id));*/
                 let key = thread.id; //threads ID correspond to the original message ID
@@ -140,8 +162,8 @@ pub async fn event_handler(
 }*/
 
 fn pingpong() -> String{
-let respuesta = String::from("pong!");
-respuesta
+    let respuesta = String::from("pong!");
+    respuesta
 }
 
 //non poise implementation:

@@ -1,4 +1,5 @@
 /target
 .idea
 my_conversation.json
+my_conversation.txt
 .env
