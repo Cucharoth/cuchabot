@@ -8,6 +8,8 @@ pub struct NodeTree<T> {
     data: Arc<T>,
     left: Option<Arc<RwLock<NodeTree<T>>>>,
     right: Option<Arc<RwLock<NodeTree<T>>>>
+
+
 }
 
 impl<T> NodeTree<T> {

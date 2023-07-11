@@ -21,16 +21,16 @@ pub async fn event_handler(
         poise::Event::Message{ new_message} => {
             if !new_message.author.bot {
                 if new_message.content == "ping" {
-                    new_message.channel_id.say(&ctx, pingpong()).await?;
+                    let variable = new_message.channel_id.say(&ctx, pingpong()).await?;
                 }
 
                 //----------chatgpt shenanigans
                 {
                     //message in thread check
-                    if new_message.channel_id.to_channel(&ctx).await?.guild().expect("Did not find guild").kind == ChannelType::PublicThread {
-
-                        println!("message is in a thread");
-                        println!("thread id: {}", new_message.channel_id);
+                    if new_message.channel_id.to_channel(&ctx).await?
+                        .guild()
+                        .expect("Did not find guild")
+                        .kind == ChannelType::PublicThread {
 
                         //lock workaround
                         let mut conversation_exist = false;
@@ -82,15 +82,15 @@ pub async fn event_handler(
                                              .await
                                              .expect("Cannot create chatgpt client, likely quota")
                                      }).await?;
-
-                            println!("message id: {}", new_message.id);
                         }
                     }
                 }
 
                 //dev section (keep at the end so we can delete the message safely)
                 {
+                    // set your ID here
                     let dev_id = 218661386950148096;
+
                     if new_message.author.id == dev_id {
                         // threads logs:
                         if new_message.content == "-threads log" {
@@ -120,9 +120,6 @@ pub async fn event_handler(
         }
 
         _ => {},
-
-
-
 
     }
     Ok(())

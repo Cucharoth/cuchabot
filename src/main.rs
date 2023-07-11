@@ -6,13 +6,6 @@ mod scraping;
 mod data;
 
 pub mod prelude{
-    //pub use serenity::async_trait;
-    //pub use serenity::prelude::*;
-    //pub use serenity::model::channel::Message;
-    //pub use serenity::framework::standard::macros::{command, group};
-    //pub use serenity::framework::standard::{StandardFramework, CommandResult};
-    //pub use serenity::model::gateway::Ready;
-    //pub use serenity::utils::Content;
     pub use crate::scraping::*;
     pub use crate::events::*;
     pub use crate::chatgpt::*;
@@ -30,8 +23,8 @@ pub mod prelude{
     //pub use shuttle_secrets::SecretStore;
     //pub use shuttle_poise::ShuttlePoise;
     //pub use anyhow::Context as _;
-
 }
+
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
@@ -39,13 +32,9 @@ use std::fs::File;
 use dotenv::{dotenv, var};
 use std::time::Duration;
 use poise::serenity_prelude::{GatewayIntents};
-//use shuttle_poise::ShuttlePoise;
-//fix here in case Error's wrong
 use crate::prelude::*;
 use crate::event_handler::event_handler;
 use crate::slash_commands::slash_commands_handler::{about, age, reset, tiburonsin, commands, mythicweek, reverse};
-//use crate::commands::commands_handler::GENERAL_GROUP;
-//use crate::slash_commands::slash_commands_handler::*;
 
 
 #[tokio::main]

@@ -1,16 +1,15 @@
 use crate::prelude::*;
+use crate::Data;
 use std::fs::{File, OpenOptions};
 use std::io;
 use std::io::Write;
 use std::io::{BufRead, BufReader, BufWriter};
 use std::path::Path;
 use std::sync::Arc;
-pub use chatgpt::prelude::*;
-pub use chatgpt::types::CompletionResponse;
-//use poise::serenity_prelude::AttachmentType::File;
 use poise::serenity_prelude::json::prelude::to_string;
 use poise::serenity_prelude::{MessageId, User};
-use crate::Data;
+pub use chatgpt::prelude::*;
+pub use chatgpt::types::CompletionResponse;
 
 
 pub struct ChatGptBuilder;
@@ -86,7 +85,7 @@ impl ChatGptBuilder {
         if let Ok(mut file) = OpenOptions::new()
             .append(true)
             .open(file_path) {
-            writeln!(file, "conversation ID: {} | User: {:?}", source_id, user).expect("TODO: panic message");
+            writeln!(file, "conversation ID: {} | User: {:?}", source_id, user).expect("cannot write in file");
         }
     }
 

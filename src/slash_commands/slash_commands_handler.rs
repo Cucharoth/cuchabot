@@ -74,7 +74,7 @@ pub async fn reset(
         let mut bst = ctx.data().thread_info_as_bst.lock().unwrap();
         bst.clear()
     }
-    ctx.say("OK!, I've forgotten everything! @_@, bip bop").await?;
+    ctx.say("OK!, I've forgotten everything! @_@, bep bop").await?;
     Ok(())
 }
 
