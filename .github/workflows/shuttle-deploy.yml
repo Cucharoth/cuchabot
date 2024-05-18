@@ -12,4 +12,4 @@ jobs:
     steps:
       - uses: shuttle-hq/deploy-action@main
         with:
-          deploy-key: SByDgFfBQgn5kqtU
+          deploy-key: ${{ secrets.SHUTTLE_API_KEY }}
