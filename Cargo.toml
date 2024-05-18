@@ -12,5 +12,5 @@ chatgpt_rs = "1.1.10"
 tokio = {version = "1.28.1", features = ["rt-multi-thread"]}
 reqwest = {version = "0.11.17", features = ["blocking", "json"]}
 scraper = "0.15.0"
-shuttle-poise = "0.18.0"
-shuttle-secrets = "0.18.0"
+shuttle-poise = "0.45.0"
+shuttle-secrets = "0.45.0"
