@@ -29,22 +29,24 @@ type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
 use std::fs::File;
+use std::sync::Arc;
+use anyhow::Context as _;
 use dotenv::{dotenv, var};
+use shuttle_runtime::SecretStore;
+use shuttle_serenity::ShuttleSerenity;
 use std::time::Duration;
-use poise::serenity_prelude::{GatewayIntents};
+use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use crate::prelude::*;
 use crate::event_handler::event_handler;
 use crate::slash_commands::slash_commands_handler::{about, age, reset, tiburonsin, commands, mythicweek, reverse};
 
 
 #[shuttle_runtime::main]
-async fn poise(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttlePoise<Data, Error> {
+async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleSerenity {
     File::create("my_conversation.txt").expect("can't create log file");
-    let discord_token = secret_store
-        .get("TOKEN")
-        .context("Discord token was not found")?;
-    poise::Framework::builder()
-        .token(env::var("TOKEN").expect("Missing 'TOKEN' env"))
+    let discord_token= secret_store
+        .get("TOKEN").context("")?;
+    let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
             commands: vec![
                 //todo: commands here
@@ -60,7 +62,7 @@ async fn poise(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> Shuttle
                 Box::pin(event_handler(ctx, event, framework, data)),
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some("~".into()),
-                edit_tracker: Some(poise::EditTracker::for_timespan(Duration::from_secs(3600))),
+                edit_tracker: Some(Arc::new(poise::EditTracker::for_timespan(Duration::from_secs(3600)))),
                 additional_prefixes: vec![
                     poise::Prefix::Literal("hey cucha,"),
                     poise::Prefix::Literal("hey cucha"),
@@ -81,49 +83,19 @@ async fn poise(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> Shuttle
                     first_message: Mutex::new(String::new()),
                 })
             })
-        })
-        .intents(GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT,)
-        .run()
-        .await
-        .unwrap();
+        }).build();
+
+        let client = ClientBuilder::new(discord_token, GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT)
+            .framework(framework)
+            .await
+            .map_err(shuttle_runtime::CustomError::new)?;
+
+        
+        //.intents(GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT,)
+        Ok(client.into())
 
 }
 
-    //non poise implementation:
-    /*
-    let framework = StandardFramework::new()
-        .configure(|c| c.prefix("~"))
-        .group(&GENERAL_GROUP);
-
-    let token = env::var("TOKEN").expect("token");
-    let intents = GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT;
-    let mut client = Client::builder(token, intents)
-        .event_handler(Handler)
-        .framework(framework)
-        .await
-        .expect("Error creating client");
-
-    if let Err(why) = client.start().await {
-        println!("An error occured while running the client: {:?}", why);
-    }*/
-
-
-/*async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
-    // This is our custom error handler
-    // They are many errors that can occur, so we only handle the ones we want to customize
-    // and forward the rest to the default handler
-    match error {
-        poise::FrameworkError::Setup { error, .. } => panic!("Failed to start bot: {:?}", error),
-        poise::FrameworkError::Command { error, ctx } => {
-            println!("Error in command `{}`: {:?}", ctx.command().name, error,);
-        }
-        error => {
-            if let Err(e) = poise::builtins::on_error(error).await {
-                println!("Error while handling error: {}", e)
-            }
-        }
-    }
-}*/
 
 
 

@@ -1,5 +1,6 @@
 use crate::chatgpt_builder::ChatGptBuilder;
-use poise::serenity_prelude::{ChannelType};
+use poise::serenity_prelude::CreateThread;
+use poise::serenity_prelude::{ChannelType, FullEvent};
 use crate::prelude::*;
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
@@ -8,21 +9,19 @@ use crate::Data;
 
 pub async fn event_handler(
     ctx: &serenity::Context,
-    event: &poise::Event<'_>,
+    event: &FullEvent,
     _framework: poise::FrameworkContext<'_, Data, Error>,
     data: &Data,
 ) -> Result<(), Error> {
     match event {
         //todo: add events here:
-        poise::Event::GuildMemberAddition { new_member } => {
+        FullEvent::GuildMemberAddition { new_member } => {
             println!("New member: {}", new_member.user.name);
         }
 
-        poise::Event::Message{ new_message} => {
+        FullEvent::Message{ new_message} => {
             if !new_message.author.bot {
-                if new_message.content == "ping" {
-                    let variable = new_message.channel_id.say(&ctx, pingpong()).await?;
-                }
+                response_handler(ctx, new_message).await?;
 
                 //----------chatgpt shenanigans
                 {
@@ -65,24 +64,25 @@ pub async fn event_handler(
                                 string.push_str(&new_message.content);
                             }
 
-                            let imput = &new_message.content[19..];
-                            new_message.channel_id.create_public_thread(
+                            let input = &new_message.content[19..];
+                            new_message.channel_id.create_thread_from_message(
                                 &ctx,
                                 new_message.id,
-                                |b| b.name(&new_message.content[19..])).await?
-                                .say(&ctx,
-                                     {
-                                         ChatGptBuilder::new(
-                                             imput,
-                                             &data,
-                                             u64::from(new_message.id),
-                                             &new_message.author,
-                                             false
-                                         )
-                                             .await
-                                             .expect("Cannot create chatgpt client, likely quota")
-                                     }).await?;
-                        }
+                                CreateThread::new(input)
+                            ).await?
+                                    .say(&ctx,
+                                        {
+                                            ChatGptBuilder::new(
+                                                input,
+                                                &data,
+                                                u64::from(new_message.id),
+                                                &new_message.author,
+                                                false
+                                            )
+                                                .await
+                                                .expect("Cannot create chatgpt client, likely quota")
+                                        }).await?;
+                            }
                     }
                 }
 
@@ -102,15 +102,15 @@ pub async fn event_handler(
             }
         }
 
-        poise::Event::ThreadUpdate {thread: _} => {
+        FullEvent::ThreadUpdate {old: _, new: _} => {
             println!("thread update!")
         }
 
-        poise::Event::ThreadCreate {thread: _} => {
+        FullEvent::ThreadCreate {thread: _} => {
             println!("thread created!")
         }
 
-        poise::Event::ThreadDelete {thread} => {
+        FullEvent::ThreadDelete {thread, full_thread_data: _} => {
             println!("thread deleted id: {}", thread.id);
             {
                 let key = thread.id; //threads ID correspond to the original message ID
@@ -126,44 +126,24 @@ pub async fn event_handler(
 
 }
 
-fn pingpong() -> String{
-    let respuesta = String::from("pong!");
-    respuesta
+async fn response_handler(ctx: &serenity::Context, message: &Message) -> Result<(), Error> {
+    pingpong(ctx, message).await?;
+    tiburonsin(ctx, message).await?;
+    Ok(())
+} 
+
+async fn tiburonsin(ctx: &serenity::Context, message: &Message) -> Result<(), Error>{
+    if message.content.contains("tiburonsin"){
+        message.channel_id.say(&ctx, String::from("HU HA HA!")).await?;
+    }
+    Ok(())
 }
 
-//non poise implementation:
-/*pub struct Handler;
-
-impl Handler {
-//todo: funciones aqui
-fn pingpong(ctx: &Context, msg: Message) -> String{
-let respuesta = String::from("pong!");
-respuesta
+async fn pingpong(ctx: &serenity::Context, message: &Message) -> Result<(), Error>{
+    if message.content.contains("ping"){
+        message.channel_id.say(&ctx, String::from("pong!")).await?;
+    }
+    Ok(())
 }
-}
-
-#[async_trait]
-impl EventHandler for Handler {
-//todo: events here
-async fn message(&self, ctx: Context, msg: Message) {
-//todo: implementar reaccion a mensajes aqui:
-
-//todo: como implementar funciones, await solo puede usarse en este scope --- half solved
-if msg.content == "!ping" {
-if let Err(why) = msg.channel_id.say(&ctx.http, Self::pingpong(&ctx, msg)).await {
-println!("Error sending message: {:?}", why);
-}
-}
-
-
-}
-
-async fn ready(&self, _: Context, ready: Ready) {
-println!("Connected as {}", ready.user.name);
-}
-
-}*/
-
-
 
 

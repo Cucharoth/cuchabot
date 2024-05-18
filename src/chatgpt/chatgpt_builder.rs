@@ -6,7 +6,6 @@ use std::io::Write;
 use std::io::{BufRead, BufReader, BufWriter};
 use std::path::Path;
 use std::sync::Arc;
-use poise::serenity_prelude::json::prelude::to_string;
 use poise::serenity_prelude::{MessageId, User};
 pub use chatgpt::prelude::*;
 pub use chatgpt::types::CompletionResponse;
