@@ -10,6 +10,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: Cucharoth/cuchabot@main
+      - uses: Cucharoth/shuttle-deploy@main
         with:
           deploy-key: SByDgFfBQgn5kqtU
