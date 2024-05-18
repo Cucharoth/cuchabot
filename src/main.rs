@@ -37,10 +37,12 @@ use crate::event_handler::event_handler;
 use crate::slash_commands::slash_commands_handler::{about, age, reset, tiburonsin, commands, mythicweek, reverse};
 
 
-#[tokio::main]
-async fn main() {
+#[shuttle_runtime::main]
+async fn poise(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttlePoise<Data, Error> {
     File::create("my_conversation.txt").expect("can't create log file");
-    dotenv().ok();
+    let discord_token = secret_store
+        .get("TOKEN")
+        .context("Discord token was not found")?;
     poise::Framework::builder()
         .token(env::var("TOKEN").expect("Missing 'TOKEN' env"))
         .options(poise::FrameworkOptions {
