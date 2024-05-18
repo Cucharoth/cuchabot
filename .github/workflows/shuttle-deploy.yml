@@ -15,4 +15,4 @@ jobs:
           deploy-key: ${{ secrets.SHUTTLE_API_KEY }}
           allow-dirty: "true"
           no-test: "true"
-          cargo-shuttle-version: "0.35.0"
+          cargo-shuttle-version: "0.40.0"
