@@ -4,8 +4,10 @@ mod slash_commands;
 mod chatgpt;
 mod scraping;
 mod data;
+mod osu;
 
 pub mod prelude{
+    pub use shuttle_runtime::SecretStore;
     pub use crate::scraping::*;
     pub use crate::events::*;
     pub use crate::chatgpt::*;
@@ -32,13 +34,12 @@ use std::fs::File;
 use std::sync::Arc;
 use anyhow::Context as _;
 use dotenv::{dotenv, var};
-use shuttle_runtime::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
 use std::time::Duration;
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use crate::prelude::*;
 use crate::event_handler::event_handler;
-use crate::slash_commands::slash_commands_handler::{about, age, reset, tiburonsin, commands, mythicweek, reverse};
+use crate::slash_commands::slash_commands_handler::*;
 
 
 #[shuttle_runtime::main]
@@ -56,7 +57,9 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
                 about(),
                 commands(),
                 mythicweek(),
-                reverse()
+                reverse(),
+                get_osu_top_score_by_username(),
+                get_osu_recent_score_by_username()
             ],
             event_handler: |ctx, event, framework, data|
                 Box::pin(event_handler(ctx, event, framework, data)),

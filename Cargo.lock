@@ -463,6 +463,7 @@ dependencies = [
  "dotenv",
  "poise 0.6.1",
  "reqwest",
+ "rosu-v2",
  "scraper",
  "shuttle-poise",
  "shuttle-runtime 0.45.0",
@@ -1106,6 +1107,7 @@ dependencies = [
  "http 0.2.12",
  "hyper",
  "rustls 0.21.12",
+ "rustls-native-certs",
  "tokio",
  "tokio-rustls 0.24.1",
 ]
@@ -1243,6 +1245,15 @@ name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
+
+[[package]]
+name = "leaky-bucket-lite"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1411c737dd21a748044ab29af14b7f920b2dcc277284df6dd986492c98bf5229"
+dependencies = [
+ "tokio",
+]
 
 [[package]]
 name = "libc"
@@ -2292,6 +2303,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "rosu-v2"
+version = "0.8.0"
+source = "git+https://github.com/MaxOhn/rosu-v2?branch=lazer#2283d880818daab058dc40e8b77f25200270f54a"
+dependencies = [
+ "bytes",
+ "dashmap",
+ "futures",
+ "hyper",
+ "hyper-rustls",
+ "itoa",
+ "leaky-bucket-lite",
+ "log",
+ "paste",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "smallstr",
+ "thiserror",
+ "time",
+ "tokio",
+ "url",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2361,6 +2396,18 @@ dependencies = [
  "rustls-webpki 0.102.4",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "rustls-native-certs"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a9aace74cb666635c918e9c12bc0d348266037aa8eb599b5cba565709a8dff00"
+dependencies = [
+ "openssl-probe",
+ "rustls-pemfile",
+ "schannel",
+ "security-framework",
 ]
 
 [[package]]
@@ -2994,6 +3041,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f92a496fb766b417c996b9c5e57daf2f7ad3b0bebe1ccfca4856390e3d3bb67"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "smallstr"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "63b1aefdf380735ff8ded0b15f31aab05daf1f70216c01c02a12926badd1df9d"
+dependencies = [
+ "serde",
+ "smallvec",
 ]
 
 [[package]]

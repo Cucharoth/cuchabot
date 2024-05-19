@@ -4,11 +4,42 @@ use poise::serenity_prelude;
 use poise::serenity_prelude::EntityType::Str;
 use poise::serenity_prelude::MessageId;
 use crate::chatgpt_builder::ChatGptBuilder;
+use crate::osu::dto::dto_osu_score::{self, OsuScore};
+use crate::osu::osu_client;
 use crate::prelude::*;
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
+///gets osu recent score by username
+#[poise::command(slash_command, prefix_command)]
+pub async fn get_osu_recent_score_by_username(
+    ctx: Context<'_>,
+    #[description = "User name"] user_name: String,
+) -> Result<(), Error> {
+    let osu = osu_client::OsuClient::new().await?;
+    let mut response: Vec<OsuScore> = vec![];
+    for score in osu.getRecentScores(&user_name).await {
+        response.push(dto_osu_score::OsuScore::new(score))
+    }
+    ctx.say(format!("{:#?}", response)).await?;
+    Ok(())
+}
+
+///gets osu best score by username
+#[poise::command(slash_command, prefix_command)]
+pub async fn get_osu_top_score_by_username(
+    ctx: Context<'_>,
+    #[description = "User name"] user_name: String,
+) -> Result<(), Error> {
+    let osu = osu_client::OsuClient::new().await?;
+    let mut response: Vec<OsuScore> = vec![];
+    for score in osu.getBestScores(&user_name).await {
+        response.push(dto_osu_score::OsuScore::new(score))
+    }
+    ctx.say(format!("{:#?}", response)).await?;
+    Ok(())
+}
 
 ///reverses your text!
 #[poise::command(slash_command)]
