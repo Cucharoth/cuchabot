@@ -47,6 +47,7 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
     File::create("my_conversation.txt").expect("can't create log file");
     let discord_token= secret_store
         .get("TOKEN").context("")?;
+    let osuinfo:(u64, String) = (secret_store.get("OSU_CLIENT_ID").context("")?.parse::<u64>().expect(""), secret_store.get("OSU_CLIENT_SECRET").context("")?);
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
             commands: vec![
@@ -84,6 +85,7 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
                     discord_thread_info: Mutex::new(HashMap::new()),
                     thread_info_as_bst: Mutex::new(BST::new()),
                     first_message: Mutex::new(String::new()),
+                    osu_info: Mutex::new(osuinfo)
                 })
             })
         }).build();

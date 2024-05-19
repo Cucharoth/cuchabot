@@ -2,18 +2,17 @@ use crate::prelude::*;
 use crate::Data;
 use rosu_v2::error;
 use rosu_v2::prelude::*;
-
-
+type Context<'a> = poise::Context<'a, Data, Error>;
+type Error = Box<dyn std::error::Error + Send + Sync>;
 
 pub struct OsuClient {
     osu: Osu
 }
 
 impl OsuClient {
-    pub async fn new() -> OsuResult<OsuClient>{
-        dotenv().ok();
-        let client_id = env::var("OSU_CLIENT_ID").expect("osu id not found").parse::<u64>().expect("error parsing id");
-        let client_secret = String::from(env::var("OSU_CLIENT_SECRET").expect("osu secret not found"));
+    pub async fn new(ctx: Context<'_>) -> OsuResult<OsuClient>{
+        let client_id = { ctx.data().osu_info.lock().unwrap().0 };
+        let client_secret = { String::from(&ctx.data().osu_info.lock().unwrap().1) };
         Ok(Self {
             osu : Osu::new(client_id, client_secret).await?
         })

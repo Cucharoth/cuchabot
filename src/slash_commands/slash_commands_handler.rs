@@ -17,7 +17,7 @@ pub async fn get_osu_recent_score_by_username(
     ctx: Context<'_>,
     #[description = "User name"] user_name: String,
 ) -> Result<(), Error> {
-    let osu = osu_client::OsuClient::new().await?;
+    let osu = osu_client::OsuClient::new(ctx).await?;
     let mut response: Vec<OsuScore> = vec![];
     for score in osu.getRecentScores(&user_name).await {
         response.push(dto_osu_score::OsuScore::new(score))
@@ -32,7 +32,7 @@ pub async fn get_osu_top_score_by_username(
     ctx: Context<'_>,
     #[description = "User name"] user_name: String,
 ) -> Result<(), Error> {
-    let osu = osu_client::OsuClient::new().await?;
+    let osu = osu_client::OsuClient::new(ctx).await?;
     let mut response: Vec<OsuScore> = vec![];
     for score in osu.getBestScores(&user_name).await {
         response.push(dto_osu_score::OsuScore::new(score))
