@@ -19,7 +19,6 @@ impl PpCheck {
         let neme_current = osu.user("neme").mode(GameMode::Osu).await?;
         let pp_has_changed = {   
             let data_mutex = data.osu_pp.lock().unwrap();
-            println!("{}", xeamx_current.clone().statistics.unwrap().pp);
             data_mutex.get("xeamx").unwrap().0 != xeamx_current.clone().statistics.unwrap().pp
         };
         if pp_has_changed {
