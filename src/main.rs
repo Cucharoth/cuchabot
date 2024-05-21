@@ -5,6 +5,7 @@ mod chatgpt;
 mod scraping;
 mod data;
 mod osu;
+mod notifications;
 
 pub mod prelude{
     pub use shuttle_runtime::SecretStore;
@@ -22,6 +23,7 @@ pub mod prelude{
     pub use crate::data::data::*;
     pub use crate::data::bst::BST;
     pub use crate::data::stack::*;
+    pub const OSU_SPAM_CHANNEL_ID: u64 = 1242292133965205597;
     //pub use shuttle_secrets::SecretStore;
     //pub use shuttle_poise::ShuttlePoise;
     //pub use anyhow::Context as _;
@@ -31,6 +33,7 @@ type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
 use std::fs::File;
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use anyhow::Context as _;
 use dotenv::{dotenv, var};
@@ -60,7 +63,9 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
                 mythicweek(),
                 reverse(),
                 get_osu_top_score_by_username(),
-                get_osu_recent_score_by_username()
+                get_osu_recent_score_by_username(),
+                get_osu_user_info(),
+                test()
             ],
             event_handler: |ctx, event, framework, data|
                 Box::pin(event_handler(ctx, event, framework, data)),
@@ -85,7 +90,10 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
                     discord_thread_info: Mutex::new(HashMap::new()),
                     thread_info_as_bst: Mutex::new(BST::new()),
                     first_message: Mutex::new(String::new()),
-                    osu_info: Mutex::new(osuinfo)
+                    osu_info: Mutex::new(osuinfo),
+                    osu_pp: Mutex::new(HashMap::new()),
+                    is_loop_running: AtomicBool::new(false),
+                    secret_store: Mutex::new(secret_store)
                 })
             })
         }).build();

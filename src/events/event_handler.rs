@@ -1,4 +1,9 @@
+use std::sync::Arc;
+
 use crate::chatgpt_builder::ChatGptBuilder;
+use crate::data::osu_data::OsuData;
+use crate::notifications::thread_handler::ThreadHandler;
+use poise::framework;
 use poise::serenity_prelude::CreateThread;
 use poise::serenity_prelude::{ChannelType, FullEvent};
 use crate::prelude::*;
@@ -100,6 +105,11 @@ pub async fn event_handler(
                     }
                 }
             }
+        }
+
+        FullEvent::CacheReady { guilds: _ } => {
+            let data_arc = Arc::new(OsuData::new(data));
+            ThreadHandler::new(ctx, data_arc, data).await?;
         }
 
         FullEvent::ThreadUpdate {old: _, new: _} => {

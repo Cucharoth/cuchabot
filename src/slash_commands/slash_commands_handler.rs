@@ -1,15 +1,51 @@
-use std::sync::Mutex;
-use std::thread::Builder;
-use poise::serenity_prelude;
-use poise::serenity_prelude::EntityType::Str;
-use poise::serenity_prelude::MessageId;
-use crate::chatgpt_builder::ChatGptBuilder;
+
+use rosu_v2::model::GameMode;
 use crate::osu::dto::dto_osu_score::{self, OsuScore};
-use crate::osu::osu_client;
+use crate::osu::{self, osu_client};
 use crate::prelude::*;
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
+
+///
+#[poise::command(slash_command, prefix_command)]
+pub async fn test(
+    ctx: Context<'_>,
+    #[description = "User name"] user_name: String,
+) -> Result<(), Error> {
+    let osu = osu_client::OsuClient::new(ctx).await?.osu.user_scores(user_name).best().limit(5).mode(GameMode::Osu).await.unwrap();
+    let max = osu.iter().max_by_key(|a| a.ended_at);
+    // for score in osu {
+    //     println!("{:#?}", max);
+    // }
+    println!("{:#?}", max);
+    //ctx.say(format!("{:#?}", osu.previous_usernames)).await?;
+    Ok(())
+}
+
+///get user info
+#[poise::command(slash_command, prefix_command)]
+pub async fn get_osu_user_info(
+    ctx: Context<'_>,
+    #[description = "User name"] user_name: String,
+) -> Result<(), Error> {
+    let osu = osu_client::OsuClient::new(ctx).await?.osu.user(user_name).mode(GameMode::Osu).await.unwrap();
+    println!("{:?}", osu.statistics.unwrap().pp);
+    let mut response: Vec<OsuScore> = vec![];
+    // match osu.getRecentScores(&user_name).await {
+    //     Ok(scores) => 
+    //             if !scores.is_empty() {
+    //                 for score in scores {
+    //                     response.push(dto_osu_score::OsuScore::new(score))
+    //                 }
+    //                 ctx.say(format!("{:#?}", response)).await?;
+    //             } else {
+    //                 ctx.say(format!("{} has not played recently e_e", user_name)).await?;
+    //             }
+    //     Err(_why) => {ctx.say(format!("El usuario no existe~")).await?;}
+    // }
+    Ok(())
+}
 
 ///gets osu recent score by username
 #[poise::command(slash_command, prefix_command)]
@@ -19,10 +55,18 @@ pub async fn get_osu_recent_score_by_username(
 ) -> Result<(), Error> {
     let osu = osu_client::OsuClient::new(ctx).await?;
     let mut response: Vec<OsuScore> = vec![];
-    for score in osu.getRecentScores(&user_name).await {
-        response.push(dto_osu_score::OsuScore::new(score))
+    match osu.getRecentScores(&user_name).await {
+        Ok(scores) => 
+                if !scores.is_empty() {
+                    for score in scores {
+                        response.push(dto_osu_score::OsuScore::new(score))
+                    }
+                    ctx.say(format!("{:#?}", response)).await?;
+                } else {
+                    ctx.say(format!("{} has not played recently e_e", user_name)).await?;
+                }
+        Err(_why) => {ctx.say(format!("El usuario no existe~")).await?;}
     }
-    ctx.say(format!("{:#?}", response)).await?;
     Ok(())
 }
 
@@ -34,10 +78,18 @@ pub async fn get_osu_top_score_by_username(
 ) -> Result<(), Error> {
     let osu = osu_client::OsuClient::new(ctx).await?;
     let mut response: Vec<OsuScore> = vec![];
-    for score in osu.getBestScores(&user_name).await {
-        response.push(dto_osu_score::OsuScore::new(score))
+    match osu.getBestScores(&user_name).await {
+        Ok(scores) => 
+                if !scores.is_empty() {
+                    for score in scores {
+                        response.push(dto_osu_score::OsuScore::new(score))
+                    }
+                    ctx.say(format!("{:#?}", response)).await?;
+                } else {
+                    ctx.say(format!("{} has not played recently e_e", user_name)).await?;
+                }
+        Err(_why) => {ctx.say(format!("El usuario no existe~")).await?;}
     }
-    ctx.say(format!("{:#?}", response)).await?;
     Ok(())
 }
 

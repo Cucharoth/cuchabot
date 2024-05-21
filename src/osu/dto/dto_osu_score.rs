@@ -1,8 +1,5 @@
 use rosu_v2::prelude::*;
 
-
-
-
 #[derive(Debug)]
 pub struct OsuScore {
     pub ranked: Option<bool>,
