@@ -1,4 +1,5 @@
 use std::sync::atomic::AtomicBool;
+use std::sync::Arc;
 
 use chatgpt::prelude::Conversation;
 use poise::serenity_prelude::User;
@@ -13,5 +14,6 @@ pub struct Data {
     pub osu_info: Mutex<(u64, String)>,
     pub osu_pp: Mutex<HashMap<String, (f32, HashMap<u32, OsuScore>)>>,
     pub is_loop_running: AtomicBool,
-    pub secret_store: Mutex<SecretStore>
+    pub secret_store: Mutex<SecretStore>,
+    pub cuchabot: Arc<Ready> 
 }

@@ -13,12 +13,12 @@ pub async fn test(
     ctx: Context<'_>,
     #[description = "User name"] user_name: String,
 ) -> Result<(), Error> {
-    let osu = osu_client::OsuClient::new(ctx).await?.osu.user_scores(user_name).best().limit(5).mode(GameMode::Osu).await.unwrap();
-    let max = osu.iter().max_by_key(|a| a.ended_at);
+    let mut osu = osu_client::OsuClient::new(ctx).await?.osu.user_scores(user_name).best().limit(1).mode(GameMode::Osu).await.unwrap();
+    //println!("{:#?}", osu.get(0));
+    //let value = OsuScore::embed_ranked_score(ctx, osu.pop().unwrap()).await;
     // for score in osu {
     //     println!("{:#?}", max);
     // }
-    println!("{:#?}", max);
     //ctx.say(format!("{:#?}", osu.previous_usernames)).await?;
     Ok(())
 }

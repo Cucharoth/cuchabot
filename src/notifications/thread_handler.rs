@@ -19,7 +19,7 @@ impl ThreadHandler {
                     //let builder = CreateMessage::new().content("this is a loop e_e");
                     //ChannelId::new(OSU_SPAM_CHANNEL_ID).send_message(&ctx1, builder).await.expect("wrong channel id");
                     PpCheck::check_current_pp(&ctx1, &osu_data1).await.expect("Error loading user");
-                    tokio::time::sleep(Duration::from_secs(60)).await;
+                    tokio::time::sleep(Duration::from_secs(120)).await;
                 }
             });
         }

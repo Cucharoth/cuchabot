@@ -1,5 +1,11 @@
+use std::sync::Arc;
+
+use poise::serenity_prelude::{ChannelId, Color, CreateEmbed, CreateEmbedAuthor, CreateMessage, EmbedThumbnail};
 use rosu_v2::prelude::*;
 
+use crate::{data::osu_data::OsuData, Data, OSU_SPAM_CHANNEL_ID};
+type Error = Box<dyn std::error::Error + Send + Sync>;
+type Context<'a> = poise::Context<'a, Data, Error>;
 #[derive(Debug)]
 pub struct OsuScore {
     pub ranked: Option<bool>,
@@ -28,6 +34,46 @@ impl OsuScore {
                 BeatMap::new(mapset)
             } else {None}
         }
+    }
+
+    pub async fn embed_ranked_score(ctx: &poise::serenity_prelude::Context, score: Score, data: &Arc<OsuData>) {
+        let title = score.mapset.clone().unwrap().title;
+        let author_name = String::from(&data.cuchabot.user.name);
+        let mut description = format!("by: {} \n", score.mapset.clone().unwrap().artist);
+        description += &format!("mapped by: {} \n", score.mapset.clone().unwrap().creator_name);
+        description += &format!("{}", score.map.clone().unwrap().version);
+        let img_author = String::from(&data.cuchabot.user.avatar_url().unwrap());
+        let author = CreateEmbedAuthor::new(author_name).icon_url(img_author);
+        let thumbnail = "https://i.ppy.sh/013ed2c11b34720790e74035d9f49078d5e9aa64/68747470733a2f2f6f73752e7070792e73682f77696b692f696d616765732f4272616e645f6964656e746974795f67756964656c696e65732f696d672f75736167652d66756c6c2d636f6c6f75722e706e67";
+        let color = Color::FABLED_PINK;
+        let accuracy = score.accuracy.to_string();
+        let grade = score.grade.to_string();
+        let stars = score.map.clone().unwrap().stars.to_string();
+        let image = score.mapset.unwrap().covers.cover;
+        let pp = score.pp.unwrap().to_string();
+        let max_combo = score.max_combo.to_string();
+        let map_score = score.legacy_score.to_string();
+        let source = score.map.clone().unwrap().url;
+        let weight = format!("{}%", score.weight.unwrap().percentage.to_string());
+        let mut fields = vec![];
+        fields.push(("Grade", grade, true));
+        fields.push(("Accuracy", accuracy, true));
+        fields.push(("PP", pp, true));
+        fields.push(("Max Combo", max_combo, true));
+        fields.push(("Score", map_score, true));
+        fields.push(("Weight", weight, true));
+        let embed = CreateEmbed::new()
+            .title(title)
+            .author(author)
+            .description(description)
+            .thumbnail(thumbnail)
+            .color(color)
+            .image(image)
+            .field("Stars", stars, false)
+            .fields(fields)
+            .url(source);
+        let builder = CreateMessage::new().embed(embed);
+        ChannelId::new(OSU_SPAM_CHANNEL_ID).send_message(&ctx, builder).await.expect("could not send message");
     }
 }
 

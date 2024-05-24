@@ -82,9 +82,9 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
             },
             ..Default::default()
         })
-        .setup(move |ctx, _ready, framework| {
+        .setup(move |ctx, ready: &Ready, framework| {
             Box::pin(async move {
-                println!("Connected as {}", _ready.user.name);
+                println!("Connected as {}", ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
                     discord_thread_info: Mutex::new(HashMap::new()),
@@ -93,7 +93,8 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
                     osu_info: Mutex::new(osuinfo),
                     osu_pp: Mutex::new(HashMap::new()),
                     is_loop_running: AtomicBool::new(false),
-                    secret_store: Mutex::new(secret_store)
+                    secret_store: Mutex::new(secret_store),
+                    cuchabot: Arc::new(ready.clone())
                 })
             })
         }).build();
