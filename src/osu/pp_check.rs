@@ -22,14 +22,16 @@ impl PpCheck {
         };
         for current_username in users {
             let current_user = osu.user(current_username.clone()).mode(GameMode::Osu).await?;
+            //println!("{} current pp: {}", current_username, current_user.clone().statistics.unwrap().pp);
             let pp_has_changed = {   
                 let data_mutex = data.osu_pp.lock().unwrap();
                 data_mutex.get(&current_username).unwrap().0 != current_user.clone().statistics.unwrap().pp
             };
             if pp_has_changed {
+                //println!("pp changed!");
                 Self::update_pp(ctx, data, current_user.clone()).await;
                 let new_score = Self::update_scores(data, current_user.clone(), &osu).await;
-                //Self::print_new_score(ctx, current_user.clone(), new_score).await;
+                //Self::print_new_score(ctx, current_user.clone(), OsuScore::new(new_score.clone())).await;
                 OsuScore::embed_ranked_score(ctx, new_score, data).await;
             }
         }
@@ -53,10 +55,11 @@ impl PpCheck {
         }
         {
             let mut osu_pp = data.osu_pp.lock().unwrap();
-            osu_pp.insert("xeamx".to_string(), (xeamx.statistics.expect("not found").pp, xeamx_map));
-            osu_pp.insert("neme".to_string(), (neme.statistics.expect("not found").pp, neme_map));
+            osu_pp.insert("xeamx".to_string(), (xeamx.clone().statistics.expect("not found").pp, xeamx_map));
+            osu_pp.insert("neme".to_string(), (neme.clone().statistics.expect("not found").pp, neme_map));
         }
         println!("osu setup done");
+        println!("{} {}", xeamx.clone().statistics.expect("not found").pp, neme.statistics.expect("not found").pp);
         Ok(())
     }
 
