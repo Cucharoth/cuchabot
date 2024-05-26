@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::{Arc}};
 use crate::{data::osu_data::OsuData, prelude::*};
 
 use poise::serenity_prelude::*;
-use rosu_v2::{error::OsuError, model::{score::Score, user::UserExtended, GameMode}, Osu};
+use rosu_v2::{error::OsuError, model::{mods::SpunOutOsu, score::Score, user::UserExtended, GameMode}, Osu};
 
 use super::{dto::dto_osu_score::OsuScore, osu_client::OsuClient};
 
@@ -82,14 +82,19 @@ impl PpCheck {
     }
 
     async fn update_pp(ctx: &poise::serenity_prelude::Context, data: &Arc<OsuData>, current_user: UserExtended) {
+        println!("Started update pp sequence.");
         let message_new_score = format!("{} got a new score!", current_user.username);
         let current_pp = current_user.clone().statistics.unwrap().pp;
+        println!("Cloned current pp");
         {
             data.osu_pp.lock().unwrap().get_mut(&current_user.username.to_string()).unwrap().0 = current_pp; 
         }
+        println!("Updated data with the new pp score");
         let message = format!("{} {} current pp: {}", message_new_score, current_user.username, current_pp);
         println!("{}", message);
+        println!("Trying to send message");
         let builder = CreateMessage::new().content(message);
         ChannelId::new(OSU_SPAM_CHANNEL_ID).send_message(&ctx, builder).await.expect("wrong channel id");
+        println!("message send!");
     }
 }
