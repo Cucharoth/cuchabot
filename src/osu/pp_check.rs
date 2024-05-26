@@ -22,13 +22,13 @@ impl PpCheck {
         };
         for current_username in users {
             let current_user = osu.user(current_username.clone()).mode(GameMode::Osu).await?;
-            //println!("{} current pp: {}", current_username, current_user.clone().statistics.unwrap().pp);
+            println!("{} current pp: {}", current_username, current_user.clone().statistics.unwrap().pp);
             let pp_has_changed = {   
                 let data_mutex = data.osu_pp.lock().unwrap();
                 data_mutex.get(&current_username).unwrap().0 != current_user.clone().statistics.unwrap().pp
             };
             if pp_has_changed {
-                //println!("pp changed!");
+                println!("pp changed for {}!", current_username);
                 Self::update_pp(ctx, data, current_user.clone()).await;
                 let new_score = Self::update_scores(data, current_user.clone(), &osu).await;
                 //Self::print_new_score(ctx, current_user.clone(), OsuScore::new(new_score.clone())).await;
@@ -88,6 +88,7 @@ impl PpCheck {
             data.osu_pp.lock().unwrap().get_mut(&current_user.username.to_string()).unwrap().0 = current_pp; 
         }
         let message = format!("{} {} current pp: {}", message_new_score, current_user.username, current_pp);
+        println!("{}", message);
         let builder = CreateMessage::new().content(message);
         ChannelId::new(OSU_SPAM_CHANNEL_ID).send_message(&ctx, builder).await.expect("wrong channel id");
     }
