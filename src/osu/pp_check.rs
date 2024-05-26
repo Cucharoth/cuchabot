@@ -1,6 +1,7 @@
 use std::{collections::HashMap, sync::{Arc}};
 use crate::{data::osu_data::OsuData, prelude::*};
 
+use chatgpt::err;
 use poise::serenity_prelude::*;
 use rosu_v2::{error::OsuError, model::{mods::SpunOutOsu, score::Score, user::UserExtended, GameMode}, Osu};
 
@@ -87,7 +88,13 @@ impl PpCheck {
         let current_pp = current_user.clone().statistics.unwrap().pp;
         println!("Cloned current pp");
         {
-            data.osu_pp.lock().unwrap().get_mut(&current_user.username.to_string()).unwrap().0 = current_pp; 
+            match data.osu_pp.lock() {
+                Ok(mut data) => match data.get_mut(&current_user.username.to_string()) {
+                    Some(tuple) => tuple.0 = current_pp,
+                    None => println!("The tuple in data was empty."),
+                },
+                Err(why) => println!("{}", why),
+            }
         }
         println!("Updated data with the new pp score");
         let message = format!("{} {} current pp: {}", message_new_score, current_user.username, current_pp);
