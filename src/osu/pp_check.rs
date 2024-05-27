@@ -76,9 +76,12 @@ impl PpCheck {
         for score in new_scores.clone() {
             new_map.insert(score.map_id, OsuScore::new(score));
         }
+        println!("Trying to update scores.");
         {
-            data.osu_pp.lock().unwrap().get_mut(&current_user.username.to_string()).unwrap().1 = new_map;
+           let mut data = data.osu_pp.lock().unwrap();
+           data.get_mut(&current_user.username.to_string()).unwrap().1 = new_map;
         }
+        println!("Done updating scores.");
         new_scores.iter().max_by_key(|x| x.ended_at).expect("no score found").clone()
     }
 
