@@ -23,7 +23,7 @@ impl PpCheck {
         };
         for current_username in users {
             let current_user = osu.user(current_username.clone()).mode(GameMode::Osu).await?;
-            println!("{} current pp: {}", current_username, current_user.clone().statistics.unwrap().pp);
+            //println!("{} current pp: {}", current_username, current_user.clone().statistics.unwrap().pp);
             let pp_has_changed = {   
                 let data_mutex = data.osu_pp.lock().unwrap();
                 data_mutex.get(&current_username).unwrap().0 != current_user.clone().statistics.unwrap().pp
@@ -44,7 +44,7 @@ impl PpCheck {
         let osu = OsuClient::new_from_thread(ctx, &data).await?.osu;
         let xeamx = osu.user("xeamx").mode(GameMode::Osu).await.expect("user not found");
         let xeamx_scores = osu.user_scores(xeamx.user_id).best().limit(100).mode(GameMode::Osu).await?;
-        let neme = osu.user("neme").mode(GameMode::Osu).await.expect("user not found");
+        let neme = osu.user("Neme").mode(GameMode::Osu).await.expect("user not found");
         let neme_scores = osu.user_scores(neme.user_id).best().limit(100).mode(GameMode::Osu).await?;
         let mut xeamx_map = HashMap::new();
         let mut neme_map = HashMap::new();
@@ -57,7 +57,7 @@ impl PpCheck {
         {
             let mut osu_pp = data.osu_pp.lock().unwrap();
             osu_pp.insert("xeamx".to_string(), (xeamx.clone().statistics.expect("not found").pp, xeamx_map));
-            osu_pp.insert("neme".to_string(), (neme.clone().statistics.expect("not found").pp, neme_map));
+            osu_pp.insert("Neme".to_string(), (neme.clone().statistics.expect("not found").pp, neme_map));
         }
         println!("osu setup done");
         println!("{} {}", xeamx.clone().statistics.expect("not found").pp, neme.statistics.expect("not found").pp);
@@ -78,8 +78,8 @@ impl PpCheck {
         }
         println!("Trying to update scores.");
         {
-           let mut data = data.osu_pp.lock().unwrap();
-           data.get_mut(&current_user.username.to_string()).unwrap().1 = new_map;
+            let mut data = data.osu_pp.lock().unwrap();
+            data.get_mut(&current_user.username.to_string()).unwrap().1 = new_map;
         }
         println!("Done updating scores.");
         new_scores.iter().max_by_key(|x| x.ended_at).expect("no score found").clone()
@@ -92,10 +92,12 @@ impl PpCheck {
         println!("Cloned current pp");
         {
             match data.osu_pp.lock() {
-                Ok(mut data) => match data.get_mut(&current_user.username.to_string()) {
+                Ok(mut data) => {
+                    println!("current username: {}, {:#?}", &current_user.username.to_string(), data.keys());
+                    match data.get_mut(&current_user.username.to_string()) {
                     Some(tuple) => tuple.0 = current_pp,
-                    None => println!("The tuple in data was empty."),
-                },
+                    None => println!("The name was not found in the data tuple"),
+                }},
                 Err(why) => println!("{}", why),
             }
         }
