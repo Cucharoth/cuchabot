@@ -64,14 +64,12 @@ pub async fn get_osu_recent_score_by_username(
 ) -> Result<(), Error> {
     let osu = osu_client::OsuClient::new(ctx).await?;
     let data_arc = Arc::new(OsuData::new(ctx.data()));
-    let mut response = vec![];
     match osu.getRecentScores(&user_name).await {
         Ok(scores) => 
                 if !scores.is_empty() {
                     for score in scores {
-                        response.push(dto_osu_score::OsuScore::embed_ranked_score_from_command(ctx, &data_arc, score).await)
+                        dto_osu_score::OsuScore::embed_ranked_score_from_command(ctx, &data_arc, score).await;
                     }
-                    ctx.say(format!("{:#?}", response)).await?;
                 } else {
                     ctx.say(format!("{} has not played recently e_e", user_name)).await?;
                 }
@@ -88,14 +86,12 @@ pub async fn get_osu_top_score_by_username(
 ) -> Result<(), Error> {
     let osu = osu_client::OsuClient::new(ctx).await?;
     let data_arc = Arc::new(OsuData::new(ctx.data()));
-    let mut response = vec![];
     match osu.getBestScores(&user_name).await {
         Ok(scores) => 
                 if !scores.is_empty() {
                     for score in scores {
-                        response.push(dto_osu_score::OsuScore::embed_ranked_score_from_command(ctx, &data_arc, score).await)
+                        dto_osu_score::OsuScore::embed_ranked_score_from_command(ctx, &data_arc, score).await;
                     }
-                    ctx.say(format!("{:#?}", response)).await?;
                 } else {
                     ctx.say(format!("{} has not played recently e_e", user_name)).await?;
                 }

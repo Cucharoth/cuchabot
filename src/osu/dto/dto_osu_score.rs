@@ -55,7 +55,7 @@ impl OsuScore {
             .image(img)
             .field("Current PP", pp, true);
         let builder = CreateMessage::new().embed(embed);
-        ChannelId::new(OSU_SPAM_CHANNEL_ID).send_message(&ctx, builder).await.expect("could not send message");
+        ctx.channel_id().send_message(&ctx, builder).await.expect("could not send message");
     }
 
     pub async fn ember_user(ctx: &poise::serenity_prelude::Context, data: &Arc<OsuData>, current_user: UserExtended) {
@@ -117,7 +117,7 @@ impl OsuScore {
             .fields(fields)
             .url(source);
         let builder = CreateMessage::new().embed(embed);
-        ChannelId::new(OSU_SPAM_CHANNEL_ID).send_message(&ctx, builder).await.expect("could not send message");
+        ctx.channel_id().send_message(&ctx, builder).await.expect("could not send message");
     }
 
     pub async fn embed_ranked_score(ctx: &poise::serenity_prelude::Context, score: Score, data: &Arc<OsuData>) {
