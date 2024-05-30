@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use poise::serenity_prelude::{model::colour, ChannelId, Color, CreateEmbed, CreateEmbedAuthor, CreateMessage, EmbedThumbnail};
+use poise::{serenity_prelude::{model::colour, ChannelId, Color, CreateEmbed, CreateEmbedAuthor, CreateMessage, EmbedThumbnail}, CreateReply};
 use rosu_v2::prelude::*;
 
 use crate::{data::osu_data::OsuData, Data, OSU_SPAM_CHANNEL_ID};
@@ -54,8 +54,8 @@ impl OsuScore {
             .color(color)
             .image(img)
             .field("Current PP", pp, true);
-        let builder = CreateMessage::new().embed(embed);
-        ctx.channel_id().send_message(&ctx, builder).await.expect("could not send message");
+        let builder = CreateReply::default().embed(embed);
+        ctx.send(builder).await.expect("could not send the message.");
     }
 
     pub async fn ember_user(ctx: &poise::serenity_prelude::Context, data: &Arc<OsuData>, current_user: UserExtended) {
@@ -116,8 +116,8 @@ impl OsuScore {
             .field("Stars", stars, false)
             .fields(fields)
             .url(source);
-        let builder = CreateMessage::new().embed(embed);
-        ctx.channel_id().send_message(&ctx, builder).await.expect("could not send message");
+        let builder = CreateReply::default().embed(embed);
+        ctx.send(builder).await.expect("could not send the message.");
     }
 
     pub async fn embed_ranked_score(ctx: &poise::serenity_prelude::Context, score: Score, data: &Arc<OsuData>) {
