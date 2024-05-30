@@ -33,7 +33,6 @@ impl PpCheck {
                 println!("pp changed for {}!", current_username);
                 Self::update_pp(ctx, data, current_user.clone()).await;
                 let new_score = Self::update_scores(data, current_user.clone(), &osu).await;
-                //Self::print_new_score(ctx, current_user.clone(), OsuScore::new(new_score.clone())).await;
                 OsuScore::embed_ranked_score(ctx, new_score, data).await;
             }
         }
@@ -88,7 +87,7 @@ impl PpCheck {
 
     async fn update_pp(ctx: &poise::serenity_prelude::Context, data: &Arc<OsuData>, current_user: UserExtended) {
         println!("Started update pp sequence.");
-        let message_new_score = format!("{} got a new score!", current_user.username);
+        OsuScore::ember_user(ctx, data, current_user.clone()).await;
         let current_pp = current_user.clone().statistics.unwrap().pp;
         println!("Cloned current pp");
         {
@@ -102,11 +101,5 @@ impl PpCheck {
             }
         }
         println!("Updated data with the new pp score");
-        let message = format!("{} {} current pp: {}", message_new_score, current_user.username, current_pp);
-        println!("{}", message);
-        println!("Trying to send message");
-        let builder = CreateMessage::new().content(message);
-        ChannelId::new(OSU_SPAM_CHANNEL_ID).send_message(&ctx, builder).await.expect("wrong channel id");
-        println!("message send!");
     }
 }
