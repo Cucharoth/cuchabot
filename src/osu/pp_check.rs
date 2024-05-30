@@ -23,10 +23,11 @@ impl PpCheck {
         };
         for current_username in users {
             let current_user = osu.user(current_username.clone()).mode(GameMode::Osu).await?;
-            //println!("{} current pp: {}", current_username, current_user.clone().statistics.unwrap().pp);
             let pp_has_changed = {   
                 let data_mutex = data.osu_pp.lock().unwrap();
-                data_mutex.get(&current_username).unwrap().0 != current_user.clone().statistics.unwrap().pp
+                let pp_old = data_mutex.get(&current_username).unwrap().0;
+                let new_pp = current_user.clone().statistics.unwrap().pp;
+                (pp_old - new_pp).abs() > 1.
             };
             if pp_has_changed {
                 println!("pp changed for {}!", current_username);
@@ -93,7 +94,6 @@ impl PpCheck {
         {
             match data.osu_pp.lock() {
                 Ok(mut data) => {
-                    println!("current username: {}, {:#?}", &current_user.username.to_string(), data.keys());
                     match data.get_mut(&current_user.username.to_string()) {
                     Some(tuple) => tuple.0 = current_pp,
                     None => println!("The name was not found in the data tuple"),
