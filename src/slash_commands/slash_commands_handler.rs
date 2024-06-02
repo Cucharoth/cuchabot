@@ -1,7 +1,9 @@
 
 use std::sync::Arc;
 
-use rosu_v2::model::GameMode;
+use poise::CreateReply;
+use rosu_v2::model::{user, GameMode};
+use serenity::{CreateEmbed, Emoji, EmojiId, MessageBuilder};
 use crate::data::osu_data::OsuData;
 use crate::osu::dto::dto_osu_score::{self, OsuScore};
 use crate::osu::{self, osu_client};
@@ -17,6 +19,7 @@ pub async fn test(
     #[description = "User name"] user_name: String,
 ) -> Result<(), Error> {
     let mut osu = osu_client::OsuClient::new(ctx).await?.osu.user(user_name).mode(GameMode::Osu).await.unwrap();
+    //let mut osu_score = osu_client::OsuClient::new(ctx).await?.osu.user_scores(user_name).mode(GameMode::Osu).limit(1).best().offset(3).await.unwrap();
     //let mut score = osu_client::OsuClient::new(ctx).await?.osu.
     let data_arc = Arc::new(OsuData::new(ctx.data()));
     
@@ -26,9 +29,19 @@ pub async fn test(
     // // }
     // osu.sort_by_key(|x| x.ended_at);
     // osu.iter().for_each(|x| println!("date: {}, score: {}", x.ended_at, x.mapset.clone().unwrap().title));
-
-    // println!("{:#?}", osu.iter().max_by_key(|x| x.ended_at ).expect("error"));
-    ctx.say(format!("{:#?}", OsuScore::ember_user_from_command(ctx, &data_arc, osu).await)).await?;
+    println!("{:#?}", osu);
+    //println!("{:#?}", osu.iter().max_by_key(|x| x.ended_at ).expect("error"));
+    OsuScore::ember_user_from_command(ctx, &data_arc, osu).await;
+    //OsuScore::embed_ranked_score_from_command(ctx, &data_arc, osu_score.get_mut(0).cloned().unwrap()).await;
+    let message = {
+        let guild = ctx.guild().unwrap();
+        let emoji = guild.emojis.get(&EmojiId::new(1246392672919355444)).unwrap();
+    //ctx.say(format!("{}", emoji)).await?;
+    MessageBuilder::new().emoji(&emoji).build()};
+    let embed = CreateEmbed::new().description(message);
+    let reply = CreateReply::default().embed(embed);
+    //ctx.send(reply).await?;
+    //let test = ctx.guild().unwrap().clone().emojis.get();
     Ok(())
 }
 

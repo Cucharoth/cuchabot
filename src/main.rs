@@ -24,6 +24,7 @@ pub mod prelude{
     pub use crate::data::bst::BST;
     pub use crate::data::stack::*;
     pub const OSU_SPAM_CHANNEL_ID: u64 = 1242292133965205597;
+    pub const EMOJI_GUILD_ID: u64 = 1002656027088523286;
     //pub use shuttle_secrets::SecretStore;
     //pub use shuttle_poise::ShuttlePoise;
     //pub use anyhow::Context as _;

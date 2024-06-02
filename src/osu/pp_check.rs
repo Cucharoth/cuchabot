@@ -23,15 +23,17 @@ impl PpCheck {
         };
         for current_username in users {
             let current_user = osu.user(current_username.clone()).mode(GameMode::Osu).await?;
+            let dif_pp;
             let pp_has_changed = {   
                 let data_mutex = data.osu_pp.lock().unwrap();
                 let pp_old = data_mutex.get(&current_username).unwrap().0;
                 let new_pp = current_user.clone().statistics.unwrap().pp;
-                (pp_old - new_pp).abs() > 1.
+                dif_pp = (pp_old - new_pp).abs();
+                dif_pp > 1.
             };
             if pp_has_changed {
                 println!("pp changed for {}!", current_username);
-                Self::update_pp(ctx, data, current_user.clone()).await;
+                Self::update_pp(ctx, data, current_user.clone(), dif_pp).await;
                 let new_score = Self::update_scores(data, current_user.clone(), &osu).await;
                 OsuScore::embed_ranked_score(ctx, new_score, data).await;
             }
@@ -85,9 +87,9 @@ impl PpCheck {
         new_scores.iter().max_by_key(|x| x.ended_at).expect("no score found").clone()
     }
 
-    async fn update_pp(ctx: &poise::serenity_prelude::Context, data: &Arc<OsuData>, current_user: UserExtended) {
+    async fn update_pp(ctx: &poise::serenity_prelude::Context, data: &Arc<OsuData>, current_user: UserExtended, dif_pp: f32) {
         println!("Started update pp sequence.");
-        OsuScore::ember_user(ctx, data, current_user.clone()).await;
+        OsuScore::ember_user(ctx, data, current_user.clone(), dif_pp).await;
         let current_pp = current_user.clone().statistics.unwrap().pp;
         println!("Cloned current pp");
         {

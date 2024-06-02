@@ -1,11 +1,24 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
+use num_format::{Locale, ToFormattedString};
 
-use poise::{serenity_prelude::{model::colour, ChannelId, Color, CreateEmbed, CreateEmbedAuthor, CreateMessage, EmbedThumbnail}, CreateReply};
+use poise::{serenity_prelude::{model::colour, ChannelId, Color, CreateEmbed, CreateEmbedAuthor, CreateMessage, EmbedThumbnail, EmojiId, Guild, MessageBuilder}, CreateReply};
 use rosu_v2::prelude::*;
 
-use crate::{data::osu_data::OsuData, Data, OSU_SPAM_CHANNEL_ID};
+use crate::{data::osu_data::OsuData, Data, EMOJI_GUILD_ID, OSU_SPAM_CHANNEL_ID};
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
+
+const EMOJI_INFO: [(&str, u64); 8] = [
+    ("XH", 1246392671057219584),
+    ("X", 1246392672919355444),
+    ("SH", 1246392667974271008),
+    ("S", 1246392669245276171),
+    ("D", 1246392666506264606),
+    ("C", 1246392664887394304),
+    ("B", 1246392663234580542),
+    ("A", 1246392661418577930)
+];
+
 #[derive(Debug)]
 pub struct OsuScore {
     pub ranked: Option<bool>,
@@ -58,7 +71,8 @@ impl OsuScore {
         ctx.send(builder).await.expect("could not send the message.");
     }
 
-    pub async fn ember_user(ctx: &poise::serenity_prelude::Context, data: &Arc<OsuData>, current_user: UserExtended) {
+    pub async fn ember_user(ctx: &poise::serenity_prelude::Context, data: &Arc<OsuData>, current_user: UserExtended, dif_pp: f32) {
+        let url = current_user.page.clone().unwrap().html;
         let author_name = String::from(&data.cuchabot.user.name);
         let img_author = String::from(&data.cuchabot.user.avatar_url().unwrap());
         let description = format!("{} got a new score!", current_user.clone().username);
@@ -74,8 +88,11 @@ impl OsuScore {
             .description(description)
             .thumbnail(thumbnail)
             .color(color)
-            .image(img)
-            .field("Current PP", pp, true);
+            //.image(img)
+            .field("Current PP", pp, true)
+            .field(" ", format!("+{}", format!("{pp:.1}", pp = dif_pp)), true)
+            .field(" ", " ", true)
+            .url(url);
         let builder = CreateMessage::new().embed(embed);
         ChannelId::new(OSU_SPAM_CHANNEL_ID).send_message(&ctx, builder).await.expect("could not send message");
     }
@@ -90,15 +107,15 @@ impl OsuScore {
         let author = CreateEmbedAuthor::new(author_name).icon_url(img_author);
         let thumbnail = "https://i.ppy.sh/013ed2c11b34720790e74035d9f49078d5e9aa64/68747470733a2f2f6f73752e7070792e73682f77696b692f696d616765732f4272616e645f6964656e746974795f67756964656c696e65732f696d672f75736167652d66756c6c2d636f6c6f75722e706e67";
         let color = Color::FABLED_PINK;
-        let accuracy = score.accuracy.to_string();
-        let grade = score.grade.to_string();
+        let accuracy = format!("{acc:.1}", acc = score.accuracy);
+        let grade = Self::get_rank_emoji_from_cmd(ctx, score.grade.to_string());
         let stars = score.map.clone().unwrap().stars.to_string();
         let image = score.mapset.unwrap().covers.cover;
-        let pp = if let Some(pp) = score.pp {pp} else {0.};
+        let pp = format!("{pp:.1}", pp = if let Some(pp) = score.pp {pp} else {0.});
         let max_combo = score.max_combo.to_string();
-        let map_score = score.legacy_score.to_string();
+        let map_score = score.legacy_score.to_formatted_string(&Locale::en);
         let source = score.map.clone().unwrap().url;
-        let weight = format!("{}%", if let Some(weight) = score.weight {weight.percentage} else {0.});
+        let weight = format!("{score:.1}%", score = if let Some(weight) = score.weight {weight.percentage} else {0.});
         let mut fields = vec![];
         fields.push(("Grade", grade, true));
         fields.push(("Accuracy", accuracy, true));
@@ -130,15 +147,15 @@ impl OsuScore {
         let author = CreateEmbedAuthor::new(author_name).icon_url(img_author);
         let thumbnail = "https://i.ppy.sh/013ed2c11b34720790e74035d9f49078d5e9aa64/68747470733a2f2f6f73752e7070792e73682f77696b692f696d616765732f4272616e645f6964656e746974795f67756964656c696e65732f696d672f75736167652d66756c6c2d636f6c6f75722e706e67";
         let color = Color::FABLED_PINK;
-        let accuracy = score.accuracy.to_string();
-        let grade = score.grade.to_string();
+        let accuracy = format!("{acc:.1}", acc = score.accuracy);
+        let grade = Self::get_rank_emoji(ctx, score.grade.to_string());
         let stars = score.map.clone().unwrap().stars.to_string();
         let image = score.mapset.unwrap().covers.cover;
-        let pp = score.pp.unwrap().to_string();
+        let pp = format!("{pp:.1}", pp = if let Some(pp) = score.pp {pp} else {0.});
         let max_combo = score.max_combo.to_string();
-        let map_score = score.legacy_score.to_string();
+        let map_score = score.legacy_score.to_formatted_string(&Locale::en);
         let source = score.map.clone().unwrap().url;
-        let weight = format!("{}%", score.weight.unwrap().percentage.to_string());
+        let weight = format!("{score:.1}%", score = if let Some(weight) = score.weight {weight.percentage} else {0.});
         let mut fields = vec![];
         fields.push(("Grade", grade, true));
         fields.push(("Accuracy", accuracy, true));
@@ -158,6 +175,24 @@ impl OsuScore {
             .url(source);
         let builder = CreateMessage::new().embed(embed);
         ChannelId::new(OSU_SPAM_CHANNEL_ID).send_message(&ctx, builder).await.expect("could not send message");
+    }
+
+    fn get_rank_emoji_from_cmd(ctx: Context<'_>, grade: String) -> String {
+        let emoji_id = EMOJI_INFO.iter().find(|x| x.0 == &grade).unwrap().1;
+        {
+            let guild = ctx.cache().guild(EMOJI_GUILD_ID).unwrap();
+            let emoji = guild.emojis.get(&EmojiId::new(emoji_id)).unwrap();
+            MessageBuilder::new().emoji(emoji).build()
+        }
+    }
+
+    fn get_rank_emoji(ctx: &poise::serenity_prelude::Context, grade: String) -> String {
+        let emoji_id = EMOJI_INFO.iter().find(|x| x.0 == &grade).unwrap().1;
+        {
+            let guild = ctx.cache.guild(EMOJI_GUILD_ID).unwrap();
+            let emoji = guild.emojis.get(&EmojiId::new(emoji_id)).unwrap();
+            MessageBuilder::new().emoji(emoji).build()
+        }
     }
 }
 

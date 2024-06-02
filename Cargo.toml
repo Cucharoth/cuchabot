@@ -18,3 +18,4 @@ shuttle-secrets = "0.21.0"
 shuttle-runtime = "0.45.0"
 shuttle-serenity = "0.45.0"
 rosu-v2 = { git = "https://github.com/MaxOhn/rosu-v2", branch = "lazer" }
+num-format = "0.4.4"
