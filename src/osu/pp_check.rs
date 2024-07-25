@@ -3,7 +3,7 @@ use crate::{data::osu_data::OsuData, prelude::*};
 
 use chatgpt::err;
 use poise::serenity_prelude::*;
-use rosu_v2::{error::OsuError, model::{mods::SpunOutOsu, score::Score, user::UserExtended, GameMode}, Osu};
+use rosu_v2::{error::OsuError, model::{score::Score, user::UserExtended, GameMode}, Osu};
 
 use super::{dto::dto_osu_score::OsuScore, osu_client::OsuClient};
 
