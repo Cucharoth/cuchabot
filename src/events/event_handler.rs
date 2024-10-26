@@ -6,6 +6,7 @@ use crate::notifications::thread_handler::ThreadHandler;
 use poise::framework;
 use poise::serenity_prelude::CreateThread;
 use poise::serenity_prelude::{ChannelType, FullEvent};
+//use rand::Rng;
 use crate::prelude::*;
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
@@ -136,9 +137,11 @@ pub async fn event_handler(
 
 }
 
+// Main message catcher, put all the messages functions here
 async fn response_handler(ctx: &serenity::Context, message: &Message) -> Result<(), Error> {
     pingpong(ctx, message).await?;
     tiburonsin(ctx, message).await?;
+    pain(ctx, message).await?;
     Ok(())
 } 
 
@@ -152,6 +155,32 @@ async fn tiburonsin(ctx: &serenity::Context, message: &Message) -> Result<(), Er
 async fn pingpong(ctx: &serenity::Context, message: &Message) -> Result<(), Error>{
     if message.content.contains("ping"){
         message.channel_id.say(&ctx, String::from("pong!")).await?;
+    }
+    Ok(())
+}
+
+async fn pain(ctx: &serenity::Context, message: &Message) -> Result<(), Error>{
+    if message.content.contains("pain"){
+        let rng = rand::random::<bool>();
+        
+        if message.content == "painguin"{
+            let response = "https://i.imgur.com/Mb5EzYr.png".to_string();
+            message.channel_id.say(&ctx, response).await?;
+            return Ok(());
+        }
+        if message.content == "painpeko"{
+            let response = "https://i.imgur.com/qSC3eMf.jpeg".to_string();
+            message.channel_id.say(&ctx, response).await?;
+            return Ok(());
+        }
+
+        let response = if rng {
+            "https://i.imgur.com/qSC3eMf.jpeg".to_string() //pain_peko
+        } else {
+            "https://i.imgur.com/Mb5EzYr.png".to_string() //painguin
+        };
+
+        message.channel_id.say(&ctx, response).await?;
     }
     Ok(())
 }

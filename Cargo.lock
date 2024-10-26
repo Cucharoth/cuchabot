@@ -455,6 +455,7 @@ dependencies = [
  "dotenv",
  "num-format",
  "poise 0.6.1",
+ "rand 0.8.5",
  "reqwest",
  "rosu-v2",
  "scraper",
