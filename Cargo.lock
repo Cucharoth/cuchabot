@@ -294,19 +294,11 @@ checksum = "a21f936df1771bf62b77f047b726c4625ff2e8aa607c01ec06e5a05bd8463401"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
+ "js-sys",
  "num-traits",
  "serde",
+ "wasm-bindgen",
  "windows-targets 0.52.5",
-]
-
-[[package]]
-name = "colored"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbf2150cce219b664a8a70df7a1f933836724b503f8a413af9365b4dcc4d90b8"
-dependencies = [
- "lazy_static",
- "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -467,7 +459,7 @@ dependencies = [
  "rosu-v2",
  "scraper",
  "shuttle-poise",
- "shuttle-runtime 0.45.0",
+ "shuttle-runtime 0.48.0",
  "shuttle-secrets",
  "shuttle-serenity",
  "tokio",
@@ -2276,6 +2268,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "reqwest-middleware"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a735987236a8e238bf0296c7e351b999c188ccc11477f311b82b55c93984216"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "http 0.2.12",
+ "reqwest",
+ "serde",
+ "task-local-extensions",
+ "thiserror",
+]
+
+[[package]]
 name = "ring"
 version = "0.16.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2340,7 +2347,7 @@ dependencies = [
 [[package]]
 name = "rosu-v2"
 version = "0.9.0"
-source = "git+https://github.com/MaxOhn/rosu-v2?branch=lazer#210a03d8037cdf9173cd10e35803c2149d9ca310"
+source = "git+https://github.com/MaxOhn/rosu-v2?branch=lazer#1f959f166bf6d09edf20d716755d4b43d4397a61"
 dependencies = [
  "bytes",
  "dashmap 6.0.1",
@@ -2730,7 +2737,7 @@ dependencies = [
  "serde_json",
  "time",
  "tokio",
- "tokio-tungstenite",
+ "tokio-tungstenite 0.21.0",
  "tracing",
  "typemap_rev 0.3.0",
  "typesize",
@@ -2779,6 +2786,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "shuttle-api-client"
+version = "0.48.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "166fbe3022a11ff3f9f771b673f9e39578dec9274a406ff278ed9ee620272e0a"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "headers",
+ "http 0.2.12",
+ "percent-encoding",
+ "reqwest",
+ "reqwest-middleware",
+ "rmp-serde",
+ "serde",
+ "serde_json",
+ "shuttle-common 0.48.0",
+ "tokio",
+ "tokio-tungstenite 0.20.1",
+ "url",
+ "uuid",
+]
+
+[[package]]
 name = "shuttle-codegen"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2792,9 +2822,9 @@ dependencies = [
 
 [[package]]
 name = "shuttle-codegen"
-version = "0.45.0"
+version = "0.48.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c82cffdb63264eb6ef8de1b2d5203012da706d7ca575205b580e64e2ba17b9e"
+checksum = "e60a2db8b8548a2a725316ae5d7a04b4dad680a4746372d1b7172f2065f9c345"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -2842,11 +2872,12 @@ dependencies = [
 
 [[package]]
 name = "shuttle-common"
-version = "0.45.0"
+version = "0.48.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd2c79ce0ce842df220bb2e70545dc3df2445813f2d68bbb1a9d953ac64a78e8"
+checksum = "89c694264eba4a286c85f9cc27f0059232fb4863cb668a11286e6b93e879a4d5"
 dependencies = [
  "anyhow",
+ "async-trait",
  "chrono",
  "comfy-table",
  "crossterm 0.27.0",
@@ -2854,14 +2885,17 @@ dependencies = [
  "opentelemetry 0.21.0",
  "opentelemetry-http 0.10.0",
  "pin-project",
+ "reqwest",
  "semver",
  "serde",
  "serde_json",
  "strum 0.26.2",
+ "thiserror",
  "tower",
  "tracing",
  "tracing-opentelemetry 0.22.0",
  "tracing-subscriber",
+ "typeshare",
  "url",
  "uuid",
  "zeroize",
@@ -2897,14 +2931,14 @@ dependencies = [
 
 [[package]]
 name = "shuttle-proto"
-version = "0.45.0"
+version = "0.48.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d32df25e2aee2fb1a21f4a52ede41b63a37c25416b803de925cfdac4fe2882e9"
+checksum = "51d322a55314553aad71cd506451b817bec1d2ef5459d939f5642b472870c1e9"
 dependencies = [
  "futures-core",
  "prost 0.12.6",
  "prost-types 0.12.6",
- "shuttle-common 0.45.0",
+ "shuttle-common 0.48.0",
  "tonic 0.10.2",
 ]
 
@@ -2936,24 +2970,26 @@ dependencies = [
 
 [[package]]
 name = "shuttle-runtime"
-version = "0.45.0"
+version = "0.48.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b369ec5757e3ca44f93849cd1bfee23f66c1512e091d366c58303111eab73e50"
+checksum = "20628ddf00446da52c448ef39b987321227195f6393dc6a5066a12fc22491bd3"
 dependencies = [
  "anyhow",
  "async-trait",
- "colored",
+ "hyper",
  "serde",
  "serde_json",
- "shuttle-codegen 0.45.0",
- "shuttle-common 0.45.0",
- "shuttle-proto 0.45.0",
- "shuttle-service 0.45.0",
+ "shuttle-api-client",
+ "shuttle-codegen 0.48.0",
+ "shuttle-common 0.48.0",
+ "shuttle-proto 0.48.0",
+ "shuttle-service 0.48.0",
  "strfmt",
  "tokio",
  "tokio-stream",
  "tokio-util",
  "tonic 0.10.2",
+ "tracing",
  "tracing-subscriber",
 ]
 
@@ -2970,12 +3006,12 @@ dependencies = [
 
 [[package]]
 name = "shuttle-serenity"
-version = "0.45.0"
+version = "0.48.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d98562df79703d3777f1fc30653e189910441aa4854cc523a7f85cf0fa29784"
+checksum = "f899a80629f3c3d007f0bb8df4ec064b7c9e5758e04e7fe9114929f9c7ef5909"
 dependencies = [
  "serenity 0.12.1",
- "shuttle-runtime 0.45.0",
+ "shuttle-runtime 0.48.0",
 ]
 
 [[package]]
@@ -2994,14 +3030,14 @@ dependencies = [
 
 [[package]]
 name = "shuttle-service"
-version = "0.45.0"
+version = "0.48.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24e419a09a6e9bc38439ca4cb00e8aec67232abf2071ad4c55b18a9d717e634a"
+checksum = "57770033649fa028aa9cc76702c66eb6c93b47a103f5ad15e2739c6404689bba"
 dependencies = [
  "anyhow",
  "async-trait",
  "serde",
- "shuttle-common 0.45.0",
+ "shuttle-common 0.48.0",
  "strfmt",
  "thiserror",
 ]
@@ -3272,6 +3308,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7b2093cf4c8eb1e67749a6762251bc9cd836b6fc171623bd0a9d324d37af2417"
 
 [[package]]
+name = "task-local-extensions"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba323866e5d033818e3240feeb9f7db2c4296674e4d9e16b97b7bf8f490434e8"
+dependencies = [
+ "pin-utils",
+]
+
+[[package]]
 name = "tempfile"
 version = "3.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3461,6 +3506,21 @@ dependencies = [
  "futures-core",
  "pin-project-lite",
  "tokio",
+]
+
+[[package]]
+name = "tokio-tungstenite"
+version = "0.20.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "212d5dcb2a1ce06d81107c3d0ffa3121fe974b73f068c8282cb1c32328113b6c"
+dependencies = [
+ "futures-util",
+ "log",
+ "rustls 0.21.12",
+ "tokio",
+ "tokio-rustls 0.24.1",
+ "tungstenite 0.20.1",
+ "webpki-roots 0.25.4",
 ]
 
 [[package]]
@@ -3774,6 +3834,26 @@ dependencies = [
 
 [[package]]
 name = "tungstenite"
+version = "0.20.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e3dac10fd62eaf6617d3a904ae222845979aec67c615d1c842b4002c7666fb9"
+dependencies = [
+ "byteorder",
+ "bytes",
+ "data-encoding",
+ "http 0.2.12",
+ "httparse",
+ "log",
+ "rand 0.8.5",
+ "rustls 0.21.12",
+ "sha1",
+ "thiserror",
+ "url",
+ "utf-8",
+]
+
+[[package]]
+name = "tungstenite"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ef1a641ea34f399a848dea702823bbecfb4c486f911735368f1f137cb8257e1"
@@ -3810,6 +3890,28 @@ name = "typenum"
 version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
+
+[[package]]
+name = "typeshare"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04f17399b76c2e743d58eac0635d7686e9c00f48cd4776f00695d9882a7d3187"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "typeshare-annotation",
+]
+
+[[package]]
+name = "typeshare-annotation"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a615d6c2764852a2e88a4f16e9ce1ea49bb776b5872956309e170d63a042a34f"
+dependencies = [
+ "quote",
+ "syn 2.0.64",
+]
 
 [[package]]
 name = "typesize"
