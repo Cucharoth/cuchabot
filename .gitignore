@@ -5,6 +5,8 @@ my_conversation.txt
 .env
 .vscode
 Secrets.toml
+score_response
+user_response
 
 *.class
 target/*
@@ -48,4 +50,5 @@ build/
 
 ### Mac OS ###
 .DS_Store
-*.class
+*.class.shuttle*
+Secrets*.toml

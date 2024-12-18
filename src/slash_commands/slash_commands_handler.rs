@@ -19,24 +19,20 @@ pub async fn test(
     #[description = "User name"] user_name: String,
 ) -> Result<(), Error> {
     // let mut osu = osu_client::OsuClient::new(ctx).await?.osu.user(user_name).mode(GameMode::Osu).await.unwrap();
-    let mut osu_score = osu_client::OsuClient::new(ctx).await?.osu.user_scores(user_name).mode(GameMode::Osu).limit(50).recent().await.unwrap();
-    //let mut score = osu_client::OsuClient::new(ctx).await?.osu.
+    //let mut osu_score = osu_client::OsuClient::new(ctx).await?.osu.user_scores(user_name).mode(GameMode::Osu).limit(1).best().offset(3).await.unwrap();
+    // let mut score = osu_client::OsuClient::new(ctx).await?.osu.
+    let mut user = osu_client::OsuClient::new(ctx).await?.osu.user(user_name).mode(GameMode::Osu).await.unwrap();
     //let data_arc = Arc::new(OsuData::new(ctx.data()));
+    //let score = osu_score.pop().unwrap();
 
-    let score = osu_score.iter().find(|u| u.mapset.clone().unwrap().title == "Rising Rainbow (TV Size)").unwrap();
-    println!("{:#?}", score);
-    // OsuScore::ember_user_from_command(ctx, &data_arc, osu).await;
-    // let perfect = osu_score.into_iter().find(|u| u.is_perfect_combo).unwrap();
-    //OsuScore::embed_ranked_score_from_command(ctx, &data_arc, perfect).await;
-    // let message = {
-    //     let guild = ctx.guild().unwrap();
-    //     let emoji = guild.emojis.get(&EmojiId::new(1246392672919355444)).unwrap();
-    // //ctx.say(format!("{}", emoji)).await?;
-    // MessageBuilder::new().emoji(&emoji).build()};
-    // let embed = CreateEmbed::new().description(message);
-    // let reply = CreateReply::default().embed(embed);
-    //ctx.say(format!("{:#?}", score.)).await?;
-    //let test = ctx.guild().unwrap().clone().emojis.get();
+    //println!("{:#?}", osu_score.pop().unwrap());
+    println!("{:#?}", user);
+    
+
+    //let score = osu_score.iter().find(|u| u.mapset.clone().unwrap().title == "Rising Rainbow (TV Size)").unwrap();
+    // let score_embed = OsuScore::get_embed_score(ctx.http() ,&data_arc, score).await;
+    // let builder = CreateReply::default().embed(score_embed);
+    // ctx.send(builder).await.expect("could not send the message.");
     Ok(())
 }
 
@@ -47,7 +43,13 @@ pub async fn get_osu_user_info(
     #[description = "User name"] user_name: String,
 ) -> Result<(), Error> {
     let osu = osu_client::OsuClient::new(ctx).await?.osu.user(user_name).mode(GameMode::Osu).await.unwrap();
-    println!("{:?}", osu.statistics.unwrap().pp);
+    //println!("{:?}", osu.statistics.unwrap().pp);
+    let data_arc = Arc::new(OsuData::new(ctx.data()));
+    let embed = OsuScore::get_embed_user(&data_arc, osu, None);
+
+    let builder = CreateReply::default().embed(embed);
+    ctx.send(builder).await.expect("could not send the message.");
+
     let mut response: Vec<OsuScore> = vec![];
     // match osu.getRecentScores(&user_name).await {
     //     Ok(scores) => 

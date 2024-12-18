@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::{Arc}};
 use crate::{data::osu_data::OsuData, prelude::*};
 
 use chatgpt::err;
-use poise::serenity_prelude::*;
+use poise::{serenity_prelude::*, CreateReply};
 use rosu_v2::{error::OsuError, model::{score::Score, user::UserExtended, GameMode}, Osu};
 
 use super::{dto::dto_osu_score::OsuScore, osu_client::OsuClient};
@@ -23,19 +23,18 @@ impl PpCheck {
         };
         for current_username in users {
             let current_user = osu.user(current_username.clone()).mode(GameMode::Osu).await?;
-            let dif_pp;
+            let old_pp;
             let pp_has_changed = {   
                 let data_mutex = data.osu_pp.lock().unwrap();
-                let pp_old = data_mutex.get(&current_username).unwrap().0;
+                old_pp = data_mutex.get(&current_username).unwrap().0;
                 let new_pp = current_user.clone().statistics.unwrap().pp;
-                dif_pp = (pp_old - new_pp).abs();
-                dif_pp > 1.
+                new_pp - old_pp > 1.
             };
             if pp_has_changed {
                 println!("pp changed for {}!", current_username);
-                Self::update_pp(ctx, data, current_user.clone(), dif_pp).await;
+                Self::update_pp(ctx, data, current_user.clone(), old_pp).await;
                 let new_score = Self::update_scores(data, current_user.clone(), &osu).await;
-                OsuScore::embed_ranked_score(ctx, new_score, data).await;
+                Self::sends_message(ctx, data, new_score).await;
             }
         }
         Ok(())
@@ -66,12 +65,6 @@ impl PpCheck {
         Ok(())
     }
 
-    async fn print_new_score(ctx: &poise::serenity_prelude::Context, current_user: UserExtended, score: OsuScore) {
-        let message = format!("new score: \n {:#?}", score);
-        let builder = CreateMessage::new().content(message);
-        ChannelId::new(OSU_SPAM_CHANNEL_ID).send_message(&ctx, builder).await.expect("wrong channel id");
-    }
-
     async fn update_scores(data: &Arc<OsuData>, current_user: UserExtended, osu: &Osu) -> Score{
         let new_scores = osu.user_scores(&current_user.username.to_string()).best().limit(100).mode(GameMode::Osu).await.expect("");
         let mut new_map = HashMap::new();
@@ -87,9 +80,14 @@ impl PpCheck {
         new_scores.iter().max_by_key(|x| x.ended_at).expect("no score found").clone()
     }
 
-    async fn update_pp(ctx: &poise::serenity_prelude::Context, data: &Arc<OsuData>, current_user: UserExtended, dif_pp: f32) {
+    async fn update_pp(ctx: &poise::serenity_prelude::Context, data: &Arc<OsuData>, current_user: UserExtended, old_pp: f32) {
         println!("Started update pp sequence.");
-        OsuScore::ember_user(ctx, data, current_user.clone(), dif_pp).await;
+        //OsuScore::ember_user(ctx, data, current_user.clone(), dif_pp).await;
+        // Creates discord embed and sends it
+        let user_embed = OsuScore::get_embed_user(data, current_user.clone(), Some(old_pp));
+        let builder = CreateMessage::new().embed(user_embed);
+        ChannelId::new(OSU_SPAM_CHANNEL_ID).send_message(&ctx, builder).await.expect("could not send message");
+
         let current_pp = current_user.clone().statistics.unwrap().pp;
         println!("Cloned current pp");
         {
@@ -103,5 +101,18 @@ impl PpCheck {
             }
         }
         println!("Updated data with the new pp score");
+    }
+
+    async fn sends_message(ctx: &poise::serenity_prelude::Context, data: &Arc<OsuData>, score: Score) {
+        let embed_score = OsuScore::get_embed_score(&ctx.http, data, score.clone()).await;
+        let builder = CreateMessage::new().embed(embed_score);
+        ChannelId::new(OSU_SPAM_CHANNEL_ID).send_message(&ctx, builder).await.expect("could not send message");
+        if score.is_perfect_combo {
+            let perfect_builder = CreateMessage::new().embed(CreateEmbed::new().image(PERFECT_IMAGE));
+            ChannelId::new(OSU_SPAM_CHANNEL_ID).send_message(&ctx, perfect_builder).await.expect("could not send message");
+        } else if score.statistics.combo_break == 0 && score.statistics.miss == 0 {
+            let fc_builder = CreateMessage::new().embed(CreateEmbed::new().image(FULL_COMBO));
+            ChannelId::new(OSU_SPAM_CHANNEL_ID).send_message(&ctx, fc_builder).await.expect("could not send message");
+        };
     }
 }
