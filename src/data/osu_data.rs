@@ -11,9 +11,9 @@ pub struct OsuData {
 
 impl OsuData {
     pub fn new(data: &Data) -> Self{
-        let mut id = 0;
-        let mut client_secret = String::new(); 
-        let mut cuchabot;
+        let id;
+        let client_secret;
+        let cuchabot;
         {
             let secrets = data.secret_store.lock().unwrap();
             id = secrets.get("OSU_CLIENT_ID").expect("").parse::<u64>().expect("");
@@ -25,7 +25,7 @@ impl OsuData {
         Self { 
             osu_pp: Mutex::new(HashMap::new()),
             osu_info: Mutex::new((id, client_secret)),
-            cuchabot: cuchabot,
+            cuchabot,
         }
     }
 }

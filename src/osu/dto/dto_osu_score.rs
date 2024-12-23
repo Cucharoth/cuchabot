@@ -1,7 +1,9 @@
-use std::{collections::HashMap, sync::Arc};
+
+use std::sync::Arc;
+
 use num_format::{Locale, ToFormattedString};
 
-use poise::{serenity_prelude::{model::colour, ChannelId, Color, CreateEmbed, CreateEmbedAuthor, CreateMessage, EmbedThumbnail, EmojiId, Guild, GuildId, Http, MessageBuilder}, CreateReply};
+use poise::{serenity_prelude::{ChannelId, Color, CreateEmbed, CreateEmbedAuthor, CreateMessage, EmojiId, GuildId, Http, MessageBuilder}, CreateReply};
 use rosu_v2::prelude::*;
 
 use crate::{data::osu_data::OsuData, Data, EMOJI_GUILD_ID, FULL_COMBO, OSU_SPAM_CHANNEL_ID, PERFECT_IMAGE};
@@ -74,8 +76,8 @@ impl OsuScore {
         let pp_field = format!("{old_pp:.1} -> {current_pp:.1} (+{diff:.1})",
             old_pp = if let Some(old_pp) = old_pp {
                 pp_diff = current_pp - old_pp;
-                old_pp.to_string()
-            } else {"0".to_string()},
+                old_pp
+            } else {0.},
             current_pp = current_pp,
             diff = pp_diff
         );

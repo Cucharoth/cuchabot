@@ -1,5 +1,4 @@
 use std::mem;
-use std::ops::ControlFlow::Break;
 
 #[derive(Debug, Clone)]
 pub struct Node<T> {
@@ -65,9 +64,9 @@ impl<T> Stack<T> {
                 pila_char.push(char);
             }
             loop {
-                let char_from_pila = pila_char.pop().expect("La pila se vacio antes de lo esperado.");
+                let char_from_pila = pila_char.pop().expect("La pila se vació antes de lo esperado.");
                 resultado.push(char_from_pila);
-                //pop() reemplaza la cabeza con None si el siguiente estaba vacio, por lo tanto:
+                //pop() reemplaza la cabeza con None si el siguiente estaba vació, por lo tanto:
                 if pila_char.head.is_none() { break; }
             }
             return resultado;

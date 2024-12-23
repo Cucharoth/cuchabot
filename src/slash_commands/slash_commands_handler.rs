@@ -2,39 +2,15 @@
 use std::sync::Arc;
 
 use poise::CreateReply;
-use rosu_v2::model::{user, GameMode};
-use serenity::{CreateEmbed, Emoji, EmojiId, MessageBuilder};
+use rosu_v2::model::GameMode;
 use crate::data::osu_data::OsuData;
 use crate::osu::dto::dto_osu_score::{self, OsuScore};
-use crate::osu::{self, osu_client};
+use crate::osu::osu_client;
 use crate::prelude::*;
+use crate::scraping::scraping_builder;
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
-
-///
-#[poise::command(slash_command, prefix_command)]
-pub async fn test(
-    ctx: Context<'_>,
-    #[description = "User name"] user_name: String,
-) -> Result<(), Error> {
-    // let mut osu = osu_client::OsuClient::new(ctx).await?.osu.user(user_name).mode(GameMode::Osu).await.unwrap();
-    //let mut osu_score = osu_client::OsuClient::new(ctx).await?.osu.user_scores(user_name).mode(GameMode::Osu).limit(1).best().offset(3).await.unwrap();
-    // let mut score = osu_client::OsuClient::new(ctx).await?.osu.
-    let mut user = osu_client::OsuClient::new(ctx).await?.osu.user(user_name).mode(GameMode::Osu).await.unwrap();
-    //let data_arc = Arc::new(OsuData::new(ctx.data()));
-    //let score = osu_score.pop().unwrap();
-
-    //println!("{:#?}", osu_score.pop().unwrap());
-    println!("{:#?}", user);
-    
-
-    //let score = osu_score.iter().find(|u| u.mapset.clone().unwrap().title == "Rising Rainbow (TV Size)").unwrap();
-    // let score_embed = OsuScore::get_embed_score(ctx.http() ,&data_arc, score).await;
-    // let builder = CreateReply::default().embed(score_embed);
-    // ctx.send(builder).await.expect("could not send the message.");
-    Ok(())
-}
 
 ///get user info
 #[poise::command(slash_command, prefix_command)]
@@ -42,27 +18,15 @@ pub async fn get_osu_user_info(
     ctx: Context<'_>,
     #[description = "User name"] user_name: String,
 ) -> Result<(), Error> {
-    let osu = osu_client::OsuClient::new(ctx).await?.osu.user(user_name).mode(GameMode::Osu).await.unwrap();
-    //println!("{:?}", osu.statistics.unwrap().pp);
     let data_arc = Arc::new(OsuData::new(ctx.data()));
-    let embed = OsuScore::get_embed_user(&data_arc, osu, None);
-
-    let builder = CreateReply::default().embed(embed);
-    ctx.send(builder).await.expect("could not send the message.");
-
-    let mut response: Vec<OsuScore> = vec![];
-    // match osu.getRecentScores(&user_name).await {
-    //     Ok(scores) => 
-    //             if !scores.is_empty() {
-    //                 for score in scores {
-    //                     response.push(dto_osu_score::OsuScore::new(score))
-    //                 }
-    //                 ctx.say(format!("{:#?}", response)).await?;
-    //             } else {
-    //                 ctx.say(format!("{} has not played recently e_e", user_name)).await?;
-    //             }
-    //     Err(_why) => {ctx.say(format!("El usuario no existe~")).await?;}
-    // }
+    match osu_client::OsuClient::new(ctx).await?.osu.user(user_name).mode(GameMode::Osu).await {
+        Ok(user) => {
+            let embed = OsuScore::get_embed_user(&data_arc, user, None);
+            let builder = CreateReply::default().embed(embed);
+            ctx.send(builder).await.expect("could not send the message.");
+        },
+        Err(_why) => {ctx.say(format!("El usuario no existe~")).await?;}
+    }
     Ok(())
 }
 
@@ -74,7 +38,7 @@ pub async fn get_osu_recent_score_by_username(
 ) -> Result<(), Error> {
     let osu = osu_client::OsuClient::new(ctx).await?;
     let data_arc = Arc::new(OsuData::new(ctx.data()));
-    match osu.getRecentScores(&user_name).await {
+    match osu.get_recent_scores(&user_name).await {
         Ok(scores) => 
                 if !scores.is_empty() {
                     for score in scores {
@@ -96,7 +60,7 @@ pub async fn get_osu_top_score_by_username(
 ) -> Result<(), Error> {
     let osu = osu_client::OsuClient::new(ctx).await?;
     let data_arc = Arc::new(OsuData::new(ctx.data()));
-    match osu.getBestScores(&user_name).await {
+    match osu.get_best_scores(&user_name).await {
         Ok(scores) => 
                 if !scores.is_empty() {
                     for score in scores {
@@ -165,19 +129,6 @@ pub async fn commands(
     Ok(())
 }
 
-///Clears all the "memory" data for Chatgpt module.
-#[poise::command(slash_command, prefix_command)]
-pub async fn reset(
-    ctx: Context<'_>
-) -> Result<(), Error> {
-    {
-        let mut bst = ctx.data().thread_info_as_bst.lock().unwrap();
-        bst.clear()
-    }
-    ctx.say("OK!, I've forgotten everything! @_@, bep bop").await?;
-    Ok(())
-}
-
 /// Displays your or another user's account creation date
 #[poise::command(slash_command, prefix_command)]
 pub async fn age(
@@ -199,18 +150,32 @@ pub async fn tiburonsin(
     Ok(())
 }
 
-//non poise implementation:
-/*#[poise::command(prefix_command, slash_command)]
+///
+#[poise::command(slash_command, prefix_command)]
 pub async fn test(
     ctx: Context<'_>,
-    #[description = "a description"] arg: bool
+    #[description = "test"] test_text: String,
 ) -> Result<(), Error> {
-    if arg {
-        ctx.say("testo").await?;
+    let data_arc = Arc::new(OsuData::new(ctx.data()));
+    match test_text.as_str() {
+        "score" => {
+            println!("score embed test");
+            let osu_score = osu_client::OsuClient::new(ctx).await?.osu.score(3778790399).await.unwrap();
+            let score_embed = OsuScore::get_embed_score(ctx.http() ,&data_arc, osu_score).await;
+            let builder = CreateReply::default().embed(score_embed);
+            ctx.send(builder).await.expect("could not send the message.");
+        },
+        "user" => {
+            println!("user embed test");
+            let user = osu_client::OsuClient::new(ctx).await?.osu.user("xeamx").mode(GameMode::Osu).await.unwrap();
+            let embed = OsuScore::get_embed_user(&data_arc, user, None);
+            let builder = CreateReply::default().embed(embed);
+            ctx.send(builder).await.expect("could not send the message.");
+        }
+        _ => {ctx.say("¯\\_(ツ)_/¯").await?;}
     }
-
     Ok(())
-}*/
+}
 
 
 

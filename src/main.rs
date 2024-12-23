@@ -1,7 +1,6 @@
 mod events;
 mod commands;
 mod slash_commands;
-mod chatgpt;
 mod scraping;
 mod data;
 mod osu;
@@ -9,9 +8,7 @@ mod notifications;
 
 pub mod prelude{
     pub use shuttle_runtime::SecretStore;
-    pub use crate::scraping::*;
     pub use crate::events::*;
-    pub use crate::chatgpt::*;
     pub use poise::serenity_prelude;
     pub use poise::serenity_prelude as serenity;
     pub use poise::serenity_prelude::{EventHandler, Message, Ready};
@@ -32,14 +29,13 @@ pub mod prelude{
     //pub use anyhow::Context as _;
 }
 
-type Error = Box<dyn std::error::Error + Send + Sync>;
-type Context<'a> = poise::Context<'a, Data, Error>;
+//type Error = Box<dyn std::error::Error + Send + Sync>;
+//type Context<'a> = poise::Context<'a, Data, Error>;
 
 use std::fs::File;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use anyhow::Context as _;
-use dotenv::{dotenv, var};
 use shuttle_serenity::ShuttleSerenity;
 use std::time::Duration;
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
@@ -60,7 +56,6 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
                 //todo: commands here
                 age(),
                 tiburonsin(),
-                reset(),
                 about(),
                 commands(),
                 mythicweek(),
@@ -90,8 +85,6 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
                 println!("Connected as {}", ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
-                    discord_thread_info: Mutex::new(HashMap::new()),
-                    thread_info_as_bst: Mutex::new(BST::new()),
                     first_message: Mutex::new(String::new()),
                     osu_info: Mutex::new(osuinfo),
                     osu_pp: Mutex::new(HashMap::new()),

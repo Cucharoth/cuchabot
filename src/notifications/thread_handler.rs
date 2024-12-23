@@ -1,6 +1,5 @@
-use std::{sync::{atomic::{Ordering}, Arc}, time::Duration};
+use std::{sync::{atomic::Ordering, Arc}, time::Duration};
 
-use poise::serenity_prelude::{ChannelId, CreateMessage};
 use rosu_v2::error::OsuError;
 
 use crate::{data::osu_data::OsuData, osu::pp_check::PpCheck, prelude::*};
