@@ -176,7 +176,7 @@ impl OsuScore {
         let title = current_user.username.clone().to_string();
         let thumbnail = &current_user.clone().avatar_url;
         let color = Color::DARK_RED;
-        let img = &current_user.cover.url;
+        let _img = &current_user.cover.url;
         let pp = current_user.clone().statistics.unwrap().pp.to_string();
         let author = CreateEmbedAuthor::new(author_name).icon_url(img_author);
         let embed = CreateEmbed::new()

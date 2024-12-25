@@ -1,13 +1,13 @@
-
 use std::sync::Arc;
 
-use poise::CreateReply;
-use rosu_v2::model::GameMode;
 use crate::data::osu_data::OsuData;
 use crate::osu::dto::dto_osu_score::{self, OsuScore};
 use crate::osu::osu_client;
 use crate::prelude::*;
 use crate::scraping::scraping_builder;
+use poise::CreateReply;
+use rosu_v2::model::GameMode;
+use tracing::{info, instrument, span, warn, Level};
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
@@ -19,13 +19,23 @@ pub async fn get_osu_user_info(
     #[description = "User name"] user_name: String,
 ) -> Result<(), Error> {
     let data_arc = Arc::new(OsuData::new(ctx.data()));
-    match osu_client::OsuClient::new(ctx).await?.osu.user(user_name).mode(GameMode::Osu).await {
+    match osu_client::OsuClient::new(ctx)
+        .await?
+        .osu
+        .user(user_name)
+        .mode(GameMode::Osu)
+        .await
+    {
         Ok(user) => {
             let embed = OsuScore::get_embed_user(&data_arc, user, None);
             let builder = CreateReply::default().embed(embed);
-            ctx.send(builder).await.expect("could not send the message.");
-        },
-        Err(_why) => {ctx.say(format!("El usuario no existe~")).await?;}
+            ctx.send(builder)
+                .await
+                .expect("could not send the message.");
+        }
+        Err(_why) => {
+            ctx.say(format!("El usuario no existe~")).await?;
+        }
     }
     Ok(())
 }
@@ -39,15 +49,20 @@ pub async fn get_osu_recent_score_by_username(
     let osu = osu_client::OsuClient::new(ctx).await?;
     let data_arc = Arc::new(OsuData::new(ctx.data()));
     match osu.get_recent_scores(&user_name).await {
-        Ok(scores) => 
-                if !scores.is_empty() {
-                    for score in scores {
-                        dto_osu_score::OsuScore::embed_ranked_score_from_command(ctx, &data_arc, score).await;
-                    }
-                } else {
-                    ctx.say(format!("{} has not played recently e_e", user_name)).await?;
+        Ok(scores) => {
+            if !scores.is_empty() {
+                for score in scores {
+                    dto_osu_score::OsuScore::embed_ranked_score_from_command(ctx, &data_arc, score)
+                        .await;
                 }
-        Err(_why) => {ctx.say(format!("El usuario no existe~")).await?;}
+            } else {
+                ctx.say(format!("{} has not played recently e_e", user_name))
+                    .await?;
+            }
+        }
+        Err(_why) => {
+            ctx.say(format!("El usuario no existe~")).await?;
+        }
     }
     Ok(())
 }
@@ -61,15 +76,20 @@ pub async fn get_osu_top_score_by_username(
     let osu = osu_client::OsuClient::new(ctx).await?;
     let data_arc = Arc::new(OsuData::new(ctx.data()));
     match osu.get_best_scores(&user_name).await {
-        Ok(scores) => 
-                if !scores.is_empty() {
-                    for score in scores {
-                        dto_osu_score::OsuScore::embed_ranked_score_from_command(ctx, &data_arc, score).await;
-                    }
-                } else {
-                    ctx.say(format!("{} has not played recently e_e", user_name)).await?;
+        Ok(scores) => {
+            if !scores.is_empty() {
+                for score in scores {
+                    dto_osu_score::OsuScore::embed_ranked_score_from_command(ctx, &data_arc, score)
+                        .await;
                 }
-        Err(_why) => {ctx.say(format!("El usuario no existe~")).await?;}
+            } else {
+                ctx.say(format!("{} has not played recently e_e", user_name))
+                    .await?;
+            }
+        }
+        Err(_why) => {
+            ctx.say(format!("El usuario no existe~")).await?;
+        }
     }
     Ok(())
 }
@@ -87,9 +107,7 @@ pub async fn reverse(
 
 ///Get the weekly world of warcraft mythic+ affix rotation.
 #[poise::command(slash_command, prefix_command)]
-pub async fn mythicweek(
-    ctx: Context<'_>
-) -> Result<(), Error> {
+pub async fn mythicweek(ctx: Context<'_>) -> Result<(), Error> {
     let mut response = "The current World of Warcraft Mythic+ affix are: ".to_string();
     response.push_str(&scraping_builder::ScraperBuilder::subcreation_weekly_affix().await?);
     ctx.say(response).await?;
@@ -99,9 +117,7 @@ pub async fn mythicweek(
 
 ///About section.
 #[poise::command(slash_command, prefix_command)]
-pub async fn about(
-    ctx: Context<'_>
-) -> Result<(), Error> {
+pub async fn about(ctx: Context<'_>) -> Result<(), Error> {
     let mut output = String::new();
     let source_link = "https://github.com/Cucharoth/cuchabot_local.git";
     output.push_str("I'm CuchaBot, a discord bot. \nAsk me anything using this format:\n");
@@ -115,13 +131,16 @@ pub async fn about(
 
 ///Shows all the commands.
 #[poise::command(slash_command, prefix_command)]
-pub async fn commands(
-    ctx: Context<'_>
-) -> Result<(), Error> {
+pub async fn commands(ctx: Context<'_>) -> Result<(), Error> {
     let mut output = String::new();
     output.push_str("You can use commands with the '~' prefix\nYou can also ask CuchaBot to use them for you with:\nhey cucha, [command]\n\n");
     for var in ctx.framework().options.commands.iter() {
-        let string = format!("[{0}]: {1:width$} \n", var.name.to_string(), var.description.clone().unwrap().to_string(), width = 100 - var.name.to_string().len());
+        let string = format!(
+            "[{0}]: {1:width$} \n",
+            var.name.to_string(),
+            var.description.clone().unwrap().to_string(),
+            width = 100 - var.name.to_string().len()
+        );
         output.push_str(&string);
     }
     ctx.say(output).await?;
@@ -143,15 +162,14 @@ pub async fn age(
 
 /// TIBURONSIN: HUHAHA
 #[poise::command(prefix_command)]
-pub async fn tiburonsin(
-    ctx: Context<'_>,
-) -> Result<(), Error> {
+pub async fn tiburonsin(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say("HU HA HA!").await?;
     Ok(())
 }
 
 ///
 #[poise::command(slash_command, prefix_command)]
+#[instrument(level = "info", skip_all)]
 pub async fn test(
     ctx: Context<'_>,
     #[description = "test"] test_text: String,
@@ -160,22 +178,58 @@ pub async fn test(
     match test_text.as_str() {
         "score" => {
             println!("score embed test");
-            let osu_score = osu_client::OsuClient::new(ctx).await?.osu.score(3778790399).await.unwrap();
-            let score_embed = OsuScore::get_embed_score(ctx.http() ,&data_arc, osu_score).await;
+            let osu_score = osu_client::OsuClient::new(ctx)
+                .await?
+                .osu
+                .score(3778790399)
+                .await
+                .unwrap();
+            let score_embed = OsuScore::get_embed_score(ctx.http(), &data_arc, osu_score).await;
             let builder = CreateReply::default().embed(score_embed);
-            ctx.send(builder).await.expect("could not send the message.");
-        },
+            ctx.send(builder)
+                .await
+                .expect("could not send the message.");
+        }
         "user" => {
             println!("user embed test");
-            let user = osu_client::OsuClient::new(ctx).await?.osu.user("xeamx").mode(GameMode::Osu).await.unwrap();
+            let user = osu_client::OsuClient::new(ctx)
+                .await?
+                .osu
+                .user("xeamx")
+                .mode(GameMode::Osu)
+                .await
+                .unwrap();
             let embed = OsuScore::get_embed_user(&data_arc, user, None);
             let builder = CreateReply::default().embed(embed);
-            ctx.send(builder).await.expect("could not send the message.");
+            ctx.send(builder)
+                .await
+                .expect("could not send the message.");
         }
-        _ => {ctx.say("¯\\_(ツ)_/¯").await?;}
+        "log" => {
+            let testo_span = span!(Level::INFO, "testo_span");
+            let _testo_span_enter = testo_span.enter();
+            testo().await;
+            testo2().await;
+            testo3().await;
+        },
+        _ => {
+            ctx.say("¯\\_(ツ)_/¯").await?;
+        }
     }
     Ok(())
 }
 
+#[instrument(level = "info", skip_all)]
+async fn testo() {
+    info!(name: "this is the testo1", target: "this_is_the_target", "this is a testo1");
+}
 
+#[instrument(level = "info", skip_all)]
+async fn testo2() {
+    warn!("this is a testo2");
+}
 
+#[instrument(level = "info", skip_all)]
+async fn testo3() {
+    info!("this is a testo3");
+}

@@ -5,8 +5,7 @@ my_conversation.txt
 .env
 .vscode
 Secrets.toml
-score_response
-user_response
+.responses
 
 *.class
 target/*
