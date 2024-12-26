@@ -16,26 +16,11 @@ pub struct OsuData {
 }
 
 impl OsuData {
-    pub fn new(data: &Data) -> Self {
-        let id;
-        let client_secret;
-        let cuchabot;
-        {
-            let secrets = data.secret_store.lock().unwrap();
-            id = secrets
-                .get("OSU_CLIENT_ID")
-                .expect("")
-                .parse::<u64>()
-                .expect("");
-            client_secret = secrets.get("OSU_CLIENT_SECRET").expect("");
-        }
-        {
-            cuchabot = data.cuchabot.clone();
-        }
+    pub fn new((id, client_secret): (u64, String), ready: Ready) -> Self {
         Self {
             players_info: Mutex::new(HashMap::new()),
             osu_info: Mutex::new((id, client_secret)),
-            cuchabot,
+            cuchabot: Arc::new(ready),
             watching_gameplay: AtomicBool::new(false),
         }
     }
@@ -132,10 +117,20 @@ impl SessionInfo {
     }
 
     pub fn get_rank_gain(&self) -> u32 {
-        let initial_rank = self.initial_user.statistics.clone().unwrap().global_rank.unwrap();
-        let updated_rank = self.updated_user.statistics.clone().unwrap().global_rank.unwrap();
+        let initial_rank = self
+            .initial_user
+            .statistics
+            .clone()
+            .unwrap()
+            .global_rank
+            .unwrap();
+        let updated_rank = self
+            .updated_user
+            .statistics
+            .clone()
+            .unwrap()
+            .global_rank
+            .unwrap();
         updated_rank - initial_rank
     }
-
-    pub fn get(player_info: &mut PlayerInfo, updated_user: &UserExtended) {}
 }

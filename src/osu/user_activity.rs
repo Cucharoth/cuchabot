@@ -1,15 +1,15 @@
 use std::sync::{atomic::Ordering, Arc};
 
 use poise::serenity_prelude::{
-    ActivityData, ChannelId, Context, CreateMessage, MessageFlags, OnlineStatus,
+    ActivityData, ChannelId, Context, CreateEmbed, CreateMessage, MessageFlags
 };
 use rosu_v2::{error::OsuError, prelude::UserExtended, Osu};
 use tracing::{error, info, instrument};
 
 use crate::{
-    data::osu_data::{self, OsuData, PlayerInfo, SessionInfo},
-    osu::pp_check::PpCheck,
-    Data, OSU_SPAM_CHANNEL_ID,
+    data::osu_data::OsuData,
+    osu::{embed::CuchaEmbed, pp_check::PpCheck},
+    OSU_SPAM_CHANNEL_ID,
 };
 
 pub struct UserActivity;
@@ -75,22 +75,14 @@ impl UserActivity {
             let mutex = osu_data.players_info.lock().unwrap();
             mutex.get(username).unwrap().session.clone()
         };
-        let pp_gain = session.get_pp_gain();
-        let rank_gain = session.get_rank_gain();
-        Self::send_report(ctx, pp_gain, rank_gain).await;
-        println!("{} gain {} pp this session", username, pp_gain);
+        let report_embed = CuchaEmbed::new_session_embed(osu_data, &session);
+        Self::send_report(ctx, report_embed).await;
         osu_data.reset_session(username);
     }
 
-    async fn send_report(ctx: &Context, pp_gain: f32, rank_gain: u32) {
-        let content = format!(
-            "work in progress~\n
-            pp ganado: \t\t {}\n
-            score ganado: \t\t {}",
-            pp_gain, rank_gain
-        );
+    async fn send_report(ctx: &Context, embed: CreateEmbed) {
         let builder = CreateMessage::new()
-            .content(content)
+            .embed(embed)
             .flags(MessageFlags::SUPPRESS_NOTIFICATIONS);
         ChannelId::new(OSU_SPAM_CHANNEL_ID)
             .send_message(&ctx, builder)

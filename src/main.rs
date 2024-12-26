@@ -36,6 +36,7 @@ use crate::event_handler::event_handler;
 use crate::prelude::*;
 use crate::slash_commands::slash_commands_handler::*;
 use anyhow::Context as _;
+use data::osu_data::OsuData;
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use shuttle_serenity::ShuttleSerenity;
 use std::fs::File;
@@ -94,11 +95,12 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
                     first_message: Mutex::new(String::new()),
-                    osu_info: Mutex::new(osuinfo),
+                    osu_info: Mutex::new(osuinfo.clone()),
                     osu_pp: Mutex::new(HashMap::new()),
                     is_loop_running: AtomicBool::new(false),
                     secret_store: Mutex::new(secret_store),
                     cuchabot: Arc::new(ready.clone()),
+                    osu_data: Arc::new(OsuData::new(osuinfo, ready.clone()))
                 })
             })
         })

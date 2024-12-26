@@ -6,6 +6,7 @@ pub mod osu_client;
 pub mod dto;
 pub mod pp_check;
 pub mod user_activity;
+pub mod embed;
 
 pub fn get_users(data: &Arc<OsuData>) -> Vec<String> {
     let data_mutex = data.players_info.lock().unwrap();

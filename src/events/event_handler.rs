@@ -1,6 +1,4 @@
-use std::sync::Arc;
 
-use crate::data::osu_data::OsuData;
 use crate::notifications::thread_handler::ThreadHandler;
 use poise::serenity_prelude::FullEvent;
 use serenity_prelude::ActivityData;
@@ -29,14 +27,13 @@ pub async fn event_handler(
             }
         }
 
-        FullEvent::PresenceUpdate { new_data } => {
+        FullEvent::PresenceUpdate { new_data: _ } => {
             //println!("{:#?}", new_data);
         }
 
         FullEvent::CacheReady { guilds: _ } => {
             ctx.set_activity(Some(ActivityData::playing("Osu!")));
-            let data_arc = Arc::new(OsuData::new(data));
-            ThreadHandler::new(ctx, data_arc, data).await?;
+            ThreadHandler::new(ctx, data).await?;
         }
 
         FullEvent::ThreadUpdate { old: _, new: _ } => {

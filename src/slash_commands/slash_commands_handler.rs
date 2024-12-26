@@ -1,7 +1,5 @@
-use std::sync::Arc;
 
-use crate::data::osu_data::OsuData;
-use crate::osu::dto::dto_osu_score::{self, OsuScore};
+use crate::osu::embed::CuchaEmbed;
 use crate::osu::osu_client;
 use crate::prelude::*;
 use crate::scraping::scraping_builder;
@@ -18,7 +16,7 @@ pub async fn get_osu_user_info(
     ctx: Context<'_>,
     #[description = "User name"] user_name: String,
 ) -> Result<(), Error> {
-    let data_arc = Arc::new(OsuData::new(ctx.data()));
+    let data_arc = ctx.data().osu_data.clone();
     match osu_client::OsuClient::new(ctx)
         .await?
         .osu
@@ -27,7 +25,7 @@ pub async fn get_osu_user_info(
         .await
     {
         Ok(user) => {
-            let embed = OsuScore::get_embed_user(&data_arc, user, None);
+            let embed = CuchaEmbed::new_user_embed(&data_arc, user, None);
             let builder = CreateReply::default().embed(embed);
             ctx.send(builder)
                 .await
@@ -47,13 +45,17 @@ pub async fn get_osu_recent_score_by_username(
     #[description = "User name"] user_name: String,
 ) -> Result<(), Error> {
     let osu = osu_client::OsuClient::new(ctx).await?;
-    let data_arc = Arc::new(OsuData::new(ctx.data()));
+    let data_arc = ctx.data().osu_data.clone();
     match osu.get_recent_scores(&user_name).await {
         Ok(scores) => {
             if !scores.is_empty() {
                 for score in scores {
-                    dto_osu_score::OsuScore::embed_ranked_score_from_command(ctx, &data_arc, score)
-                        .await;
+                    let score_embed =
+                        CuchaEmbed::new_score_embed(ctx.http(), &data_arc, score).await;
+                    let builder = CreateReply::default().embed(score_embed);
+                    ctx.send(builder)
+                        .await
+                        .expect("could not send the message.");
                 }
             } else {
                 ctx.say(format!("{} has not played recently e_e", user_name))
@@ -74,13 +76,17 @@ pub async fn get_osu_top_score_by_username(
     #[description = "User name"] user_name: String,
 ) -> Result<(), Error> {
     let osu = osu_client::OsuClient::new(ctx).await?;
-    let data_arc = Arc::new(OsuData::new(ctx.data()));
+    let data_arc = ctx.data().osu_data.clone();
     match osu.get_best_scores(&user_name).await {
         Ok(scores) => {
             if !scores.is_empty() {
                 for score in scores {
-                    dto_osu_score::OsuScore::embed_ranked_score_from_command(ctx, &data_arc, score)
-                        .await;
+                    let score_embed =
+                        CuchaEmbed::new_score_embed(ctx.http(), &data_arc, score).await;
+                    let builder = CreateReply::default().embed(score_embed);
+                    ctx.send(builder)
+                        .await
+                        .expect("could not send the message.");
                 }
             } else {
                 ctx.say(format!("{} has not played recently e_e", user_name))
@@ -174,7 +180,7 @@ pub async fn test(
     ctx: Context<'_>,
     #[description = "test"] test_text: String,
 ) -> Result<(), Error> {
-    let data_arc = Arc::new(OsuData::new(ctx.data()));
+    let data_arc = ctx.data().osu_data.clone();
     match test_text.as_str() {
         "score" => {
             println!("score embed test");
@@ -184,7 +190,7 @@ pub async fn test(
                 .score(3778790399)
                 .await
                 .unwrap();
-            let score_embed = OsuScore::get_embed_score(ctx.http(), &data_arc, osu_score).await;
+            let score_embed = CuchaEmbed::new_score_embed(ctx.http(), &data_arc, osu_score).await;
             let builder = CreateReply::default().embed(score_embed);
             ctx.send(builder)
                 .await
@@ -199,7 +205,7 @@ pub async fn test(
                 .mode(GameMode::Osu)
                 .await
                 .unwrap();
-            let embed = OsuScore::get_embed_user(&data_arc, user, None);
+            let embed = CuchaEmbed::new_user_embed(&data_arc, user, None);
             let builder = CreateReply::default().embed(embed);
             ctx.send(builder)
                 .await
@@ -211,7 +217,19 @@ pub async fn test(
             testo().await;
             testo2().await;
             testo3().await;
-        },
+        }
+        "session" => {
+            let session = {
+                let mut mutex = data_arc.players_info.lock().unwrap();
+                mutex.get_mut("Neme").unwrap().session.clone()
+            };
+            session.updated_user.statistics.clone().unwrap().pp = 20000.;
+            let embed = CuchaEmbed::new_session_embed(&data_arc, &session);
+            let builder = CreateReply::default().embed(embed);
+            ctx.send(builder)
+                .await
+                .expect("could not send the message.");
+        }
         _ => {
             ctx.say("¯\\_(ツ)_/¯").await?;
         }

@@ -7,7 +7,6 @@ use rosu_v2::{error::OsuError, model::GameMode};
 use serenity_prelude::ActivityData;
 
 use crate::{
-    data::osu_data::OsuData,
     osu::{get_users, osu_client::OsuClient, pp_check::PpCheck, user_activity::UserActivity},
     prelude::*,
 };
@@ -20,10 +19,10 @@ impl ThreadHandler {
     #[instrument(level = "info", skip_all)]
     pub async fn new(
         old_ctx: &poise::serenity_prelude::Context,
-        old_osu_data: Arc<OsuData>,
         data: &Data,
     ) -> Result<(), OsuError> {
         let ctx_arc = Arc::new(old_ctx.clone());
+        let old_osu_data = &data.osu_data;
         PpCheck::setup(old_ctx, &old_osu_data).await?;
         if !&data.is_loop_running.load(Ordering::Relaxed) {
             data.is_loop_running.store(true, Ordering::Relaxed);

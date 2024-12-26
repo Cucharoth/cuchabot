@@ -13,7 +13,7 @@ use rosu_v2::{
 };
 use tracing::{error, info, instrument, span, warn, Level};
 
-use super::dto::dto_osu_score::OsuScore;
+use super::{dto::dto_osu_score::OsuScore, embed::CuchaEmbed};
 
 pub struct PpCheck;
 
@@ -158,7 +158,7 @@ impl PpCheck {
         info!("Started update pp sequence.");
         //OsuScore::ember_user(ctx, data, current_user.clone(), dif_pp).await;
         // Creates discord embed and sends it
-        let user_embed = OsuScore::get_embed_user(data, current_user.clone(), Some(old_pp));
+        let user_embed = CuchaEmbed::new_user_embed(data, current_user.clone(), Some(old_pp));
         let builder = CreateMessage::new().embed(user_embed);
         ChannelId::new(OSU_SPAM_CHANNEL_ID)
             .send_message(&ctx, builder)
@@ -185,7 +185,7 @@ impl PpCheck {
         data: &Arc<OsuData>,
         score: Score,
     ) {
-        let embed_score = OsuScore::get_embed_score(&ctx.http, data, score.clone()).await;
+        let embed_score = CuchaEmbed::new_score_embed(&ctx.http, data, score.clone()).await;
         let builder = CreateMessage::new().embed(embed_score);
         ChannelId::new(OSU_SPAM_CHANNEL_ID)
             .send_message(&ctx, builder)
