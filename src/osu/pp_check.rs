@@ -11,7 +11,7 @@ use rosu_v2::{
     model::{score::Score, user::UserExtended, GameMode},
     Osu,
 };
-use tracing::{error, info, instrument, span, warn, Level};
+use tracing::{error, info, instrument, warn};
 
 use super::{dto::dto_osu_score::OsuScore, embed::CuchaEmbed};
 
@@ -40,8 +40,6 @@ impl PpCheck {
         info!("pp has changed: {}", pp_has_changed);
         if pp_has_changed {
             warn!("pp changed for {}!", current_username);
-            let update_pp = span!(Level::INFO, "update_pp");
-            let _update_pp_enter = update_pp.enter();
             Self::update_pp(ctx, data, current_user.clone(), old_pp).await;
             UserActivity::update_session(ctx, data, current_user);
             let new_score = Self::update_scores(data, current_user.clone(), &osu).await;

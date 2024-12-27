@@ -53,7 +53,7 @@ impl CuchaEmbed {
                 .current
         );
         description += &format!(
-            "pp: {}\n",
+            "pp: {:.1}\n",
             &session.updated_user.statistics.clone().unwrap().pp
         );
         description += &format!(
@@ -65,14 +65,18 @@ impl CuchaEmbed {
                 .unwrap()
                 .global_rank
                 .unwrap()
+                .to_formatted_string(&Locale::en)
         );
         let thumbnail = &session.updated_user.avatar_url;
         let color = Color::MAGENTA;
-        let pp_gain = session.get_pp_gain();
-        let rank_gain = session.get_rank_gain();
+        let pp_gain = format!("+{:.1}", session.get_pp_gain());
+        let rank_gain = format!(
+            "+{}",
+            session.get_rank_gain().to_formatted_string(&Locale::en)
+        );
         let mut fields = vec![];
-        fields.push(("PP gain", pp_gain.to_string(), true));
-        fields.push(("Rank gain", rank_gain.to_string(), true));
+        fields.push(("PP gain", pp_gain, true));
+        fields.push(("Rank gain", rank_gain, true));
         CreateEmbed::new()
             .author(author)
             .title(title)

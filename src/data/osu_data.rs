@@ -116,7 +116,7 @@ impl SessionInfo {
         updated_pp - self.initial_user.statistics.clone().unwrap().pp
     }
 
-    pub fn get_rank_gain(&self) -> u32 {
+    pub fn get_rank_gain(&self) -> i32 {
         let initial_rank = self
             .initial_user
             .statistics
@@ -131,6 +131,6 @@ impl SessionInfo {
             .unwrap()
             .global_rank
             .unwrap();
-        updated_rank - initial_rank
+        (initial_rank - updated_rank) as i32
     }
 }
