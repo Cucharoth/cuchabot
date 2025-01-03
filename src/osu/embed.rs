@@ -6,10 +6,7 @@ use poise::serenity_prelude::{
 };
 use rosu_v2::prelude::{Score, UserExtended};
 
-use crate::{
-    data::osu_data::{OsuData, SessionInfo},
-    EMOJI_GUILD_ID,
-};
+use crate::data::osu_data::{OsuData, SessionInfo};
 
 // get the id with '\' before an emoji on discord chat
 const EMOJI_INFO: [(&str, u64); 17] = [
@@ -33,6 +30,7 @@ const EMOJI_INFO: [(&str, u64); 17] = [
 ];
 
 const OSU_THUMBNAIL: &str = "https://i.ppy.sh/013ed2c11b34720790e74035d9f49078d5e9aa64/68747470733a2f2f6f73752e7070792e73682f77696b692f696d616765732f4272616e645f6964656e746974795f67756964656c696e65732f696d672f75736167652d66756c6c2d636f6c6f75722e706e67";
+pub const EMOJI_GUILD_ID: u64 = 1002656027088523286;
 
 pub struct CuchaEmbed;
 

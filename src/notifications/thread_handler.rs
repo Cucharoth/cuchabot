@@ -19,21 +19,20 @@ impl ThreadHandler {
     #[instrument(level = "info", skip_all)]
     pub async fn new(
         old_ctx: &poise::serenity_prelude::Context,
-        data: &Data,
+        old_data: Arc<Db>,
     ) -> Result<(), OsuError> {
         let ctx_arc = Arc::new(old_ctx.clone());
-        let old_osu_data = &data.osu_data;
-        PpCheck::setup(old_ctx, &old_osu_data).await?;
-        if !&data.is_loop_running.load(Ordering::Relaxed) {
-            data.is_loop_running.store(true, Ordering::Relaxed);
+        PpCheck::setup(old_ctx, &old_data.osu_data).await?;
+        if !&old_data.is_loop_running.load(Ordering::Relaxed) {
+            old_data.is_loop_running.store(true, Ordering::Relaxed);
             let ctx = Arc::clone(&ctx_arc);
-            let osu_data = old_osu_data.clone();
+            let data = Arc::clone(&old_data);
             tokio::spawn(async move {
                 loop {
-                    match OsuClient::new_from_thread(&ctx, &osu_data).await {
+                    match OsuClient::new_from_thread(&ctx, &data.osu_data).await {
                         Ok(osu_client) => {
                             let osu = osu_client.osu;
-                            let users = get_users(&osu_data);
+                            let users = get_users(&data.osu_data);
                             for current_username in users {
                                 let current_user = osu
                                     .user(current_username.clone())
@@ -44,7 +43,7 @@ impl ThreadHandler {
                                 // handles user activity checks
                                 if let Err(why) = UserActivity::user_activity(
                                     &ctx,
-                                    &osu_data,
+                                    &data,
                                     &osu,
                                     &current_user,
                                 )
@@ -54,12 +53,12 @@ impl ThreadHandler {
                                 }
                             }
 
-                            let currently_playing = osu_data.get_currently_playing();
+                            let currently_playing = data.osu_data.get_currently_playing();
                             // resets bot activity
-                            if currently_playing == 0 && osu_data.watching_gameplay.load(Ordering::Relaxed){
+                            if currently_playing == 0 && data.osu_data.watching_gameplay.load(Ordering::Relaxed){
                                 info!("activity reset");
                                 ctx.set_activity(Some(ActivityData::playing("Osu!")));
-                                osu_data.watching_gameplay.store(false, Ordering::Relaxed);
+                                data.osu_data.watching_gameplay.store(false, Ordering::Relaxed);
                             }
                         }
                         Err(why) => error!("error getting an osu client: {}", why),

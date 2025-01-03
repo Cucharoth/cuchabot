@@ -2,9 +2,11 @@ mod commands;
 mod data;
 mod events;
 mod notifications;
+mod ollama;
 mod osu;
 mod scraping;
 mod slash_commands;
+mod message;
 
 pub mod prelude {
     pub use crate::data::bst::BST;
@@ -20,10 +22,6 @@ pub mod prelude {
     pub use std::collections::HashMap;
     pub use std::env;
     pub use std::sync::Mutex;
-    pub const OSU_SPAM_CHANNEL_ID: u64 = 1242292133965205597;
-    pub const EMOJI_GUILD_ID: u64 = 1002656027088523286;
-    pub const PERFECT_IMAGE: &str = "https://i.imgur.com/rhmsFV2.png";
-    pub const FULL_COMBO: &str = "https://i.imgur.com/sHJRcxA.png";
     //pub use shuttle_secrets::SecretStore;
     //pub use shuttle_poise::ShuttlePoise;
     //pub use anyhow::Context as _;
@@ -37,6 +35,7 @@ use crate::prelude::*;
 use crate::slash_commands::slash_commands_handler::*;
 use anyhow::Context as _;
 use data::osu_data::OsuData;
+use ollama::init_ollama;
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use shuttle_serenity::ShuttleSerenity;
 use std::fs::File;
@@ -47,6 +46,7 @@ use std::time::Duration;
 #[shuttle_runtime::main]
 async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleSerenity {
     File::create("my_conversation.txt").expect("can't create log file");
+    let ollama = init_ollama(&secret_store);
     let discord_token = secret_store.get("TOKEN").context("")?;
     let osuinfo: (u64, String) = (
         secret_store
@@ -85,6 +85,7 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
                     poise::Prefix::Literal("hey cucha,"),
                     poise::Prefix::Literal("hey cucha giv"),
                 ],
+                mention_as_prefix: false,
                 ..Default::default()
             },
             ..Default::default()
@@ -94,13 +95,16 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
                 println!("Connected as {}", ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
-                    first_message: Mutex::new(String::new()),
-                    osu_info: Mutex::new(osuinfo.clone()),
-                    osu_pp: Mutex::new(HashMap::new()),
-                    is_loop_running: AtomicBool::new(false),
-                    secret_store: Mutex::new(secret_store),
-                    cuchabot: Arc::new(ready.clone()),
-                    osu_data: Arc::new(OsuData::new(osuinfo, ready.clone()))
+                    db: Arc::new(Db {
+                        first_message: Mutex::new(String::new()),
+                        osu_info: Mutex::new(osuinfo.clone()),
+                        osu_pp: Mutex::new(HashMap::new()),
+                        is_loop_running: AtomicBool::new(false),
+                        secret_store: Mutex::new(secret_store),
+                        cuchabot: Arc::new(ready.clone()),
+                        osu_data: Arc::new(OsuData::new(osuinfo, ready.clone())),
+                        ollama: Mutex::new(ollama),
+                    }),
                 })
             })
         })

@@ -1,8 +1,7 @@
-
-use crate::osu::embed::CuchaEmbed;
 use crate::osu::osu_client;
 use crate::prelude::*;
 use crate::scraping::scraping_builder;
+use crate::{ollama::chat::chat::OllamaChat, osu::embed::CuchaEmbed};
 use poise::CreateReply;
 use rosu_v2::model::GameMode;
 use tracing::{info, instrument, span, warn, Level};
@@ -16,7 +15,7 @@ pub async fn get_osu_user_info(
     ctx: Context<'_>,
     #[description = "User name"] user_name: String,
 ) -> Result<(), Error> {
-    let data_arc = ctx.data().osu_data.clone();
+    let data_arc = ctx.data().db.osu_data.clone();
     match osu_client::OsuClient::new(ctx)
         .await?
         .osu
@@ -45,7 +44,7 @@ pub async fn get_osu_recent_score_by_username(
     #[description = "User name"] user_name: String,
 ) -> Result<(), Error> {
     let osu = osu_client::OsuClient::new(ctx).await?;
-    let data_arc = ctx.data().osu_data.clone();
+    let data_arc = ctx.data().db.osu_data.clone();
     match osu.get_recent_scores(&user_name).await {
         Ok(scores) => {
             if !scores.is_empty() {
@@ -76,7 +75,7 @@ pub async fn get_osu_top_score_by_username(
     #[description = "User name"] user_name: String,
 ) -> Result<(), Error> {
     let osu = osu_client::OsuClient::new(ctx).await?;
-    let data_arc = ctx.data().osu_data.clone();
+    let data_arc = ctx.data().db.osu_data.clone();
     match osu.get_best_scores(&user_name).await {
         Ok(scores) => {
             if !scores.is_empty() {
@@ -180,7 +179,7 @@ pub async fn test(
     ctx: Context<'_>,
     #[description = "test"] test_text: String,
 ) -> Result<(), Error> {
-    let data_arc = ctx.data().osu_data.clone();
+    let data_arc = ctx.data().db.osu_data.clone();
     match test_text.as_str() {
         "score" => {
             println!("score embed test");
@@ -229,6 +228,14 @@ pub async fn test(
             ctx.send(builder)
                 .await
                 .expect("could not send the message.");
+        }
+        "congrats" => {
+            let username = "Cucharoth";
+            let old_pp = 1000.;
+            let new_pp = 2000.;
+            let response =
+                OllamaChat::new_score_interaction(&ctx.data().db, username, old_pp, new_pp).await;
+            println!("{}", response);
         }
         _ => {
             ctx.say("¯\\_(ツ)_/¯").await?;

@@ -1,5 +1,7 @@
 use crate::{
     data::osu_data::{OsuData, PlayerInfo, PpInfo, SessionInfo},
+    message::message::CuchabotMessage,
+    ollama::chat::chat::OllamaChat,
     osu::{osu_client::OsuClient, user_activity::UserActivity},
     prelude::*,
 };
@@ -21,14 +23,15 @@ impl PpCheck {
     #[instrument(level = "info", skip_all)]
     pub async fn check_current_pp(
         ctx: &poise::serenity_prelude::Context,
-        data: &Arc<OsuData>,
+        data: &Arc<Db>,
         osu: &Osu,
         current_user: &UserExtended,
     ) -> Result<(), OsuError> {
+        let osu_data = &data.osu_data;
         let current_username = &current_user.username.to_string();
         let old_pp;
         let pp_has_changed = {
-            let data_mutex = data.players_info.lock().unwrap();
+            let data_mutex = osu_data.players_info.lock().unwrap();
             old_pp = data_mutex.get(current_username).unwrap().pp_info.current_pp;
             let new_pp = current_user.clone().statistics.unwrap().pp;
             info!(
@@ -40,10 +43,21 @@ impl PpCheck {
         info!("pp has changed: {}", pp_has_changed);
         if pp_has_changed {
             warn!("pp changed for {}!", current_username);
-            Self::update_pp(ctx, data, current_user.clone(), old_pp).await;
-            UserActivity::update_session(ctx, data, current_user);
-            let new_score = Self::update_scores(data, current_user.clone(), &osu).await;
-            Self::sends_message(ctx, data, new_score).await;
+            Self::update_pp(ctx, osu_data, current_user.clone(), old_pp).await;
+            UserActivity::update_session(ctx, osu_data, current_user);
+            let new_score = Self::update_scores(osu_data, current_user.clone(), &osu).await;
+            Self::send_discord_embeds(ctx, osu_data, new_score.clone()).await;
+            CuchabotMessage::new_msg_spam_channel(
+                ctx,
+                OllamaChat::new_score_interaction(
+                    data,
+                    current_username,
+                    old_pp,
+                    current_user.statistics.clone().unwrap().pp,
+                )
+                .await,
+            )
+            .await;
         }
         Ok(())
     }
@@ -154,14 +168,10 @@ impl PpCheck {
         old_pp: f32,
     ) {
         info!("Started update pp sequence.");
-        //OsuScore::ember_user(ctx, data, current_user.clone(), dif_pp).await;
+
         // Creates discord embed and sends it
         let user_embed = CuchaEmbed::new_user_embed(data, current_user.clone(), Some(old_pp));
-        let builder = CreateMessage::new().embed(user_embed);
-        ChannelId::new(OSU_SPAM_CHANNEL_ID)
-            .send_message(&ctx, builder)
-            .await
-            .expect("could not send message");
+        CuchabotMessage::new_msg_spam_channel_with_embed(ctx, user_embed).await;
 
         let current_pp = current_user.clone().statistics.unwrap().pp;
         info!("Cloned current pp");
@@ -178,30 +188,17 @@ impl PpCheck {
     }
 
     #[instrument(level = "info", skip_all)]
-    async fn sends_message(
+    async fn send_discord_embeds(
         ctx: &poise::serenity_prelude::Context,
         data: &Arc<OsuData>,
         score: Score,
     ) {
         let embed_score = CuchaEmbed::new_score_embed(&ctx.http, data, score.clone()).await;
-        let builder = CreateMessage::new().embed(embed_score);
-        ChannelId::new(OSU_SPAM_CHANNEL_ID)
-            .send_message(&ctx, builder)
-            .await
-            .expect("could not send message");
+        CuchabotMessage::new_msg_spam_channel_with_embed(ctx, embed_score).await;
         if score.is_perfect_combo {
-            let perfect_builder =
-                CreateMessage::new().embed(CreateEmbed::new().image(PERFECT_IMAGE));
-            ChannelId::new(OSU_SPAM_CHANNEL_ID)
-                .send_message(&ctx, perfect_builder)
-                .await
-                .expect("could not send message");
+            CuchabotMessage::spam_channel_osu_perfect(ctx).await;
         } else if score.statistics.combo_break == 0 && score.statistics.miss == 0 {
-            let fc_builder = CreateMessage::new().embed(CreateEmbed::new().image(FULL_COMBO));
-            ChannelId::new(OSU_SPAM_CHANNEL_ID)
-                .send_message(&ctx, fc_builder)
-                .await
-                .expect("could not send message");
+            CuchabotMessage::spam_channel_osu_fc(ctx).await;
         };
     }
 }

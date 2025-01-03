@@ -12,8 +12,8 @@ pub struct OsuClient {
 
 impl OsuClient {
     pub async fn new(ctx: Context<'_>) -> OsuResult<OsuClient>{
-        let client_id = { ctx.data().osu_info.lock().unwrap().0 };
-        let client_secret = { String::from(&ctx.data().osu_info.lock().unwrap().1) };
+        let client_id = { ctx.data().db.osu_info.lock().unwrap().0 };
+        let client_secret = { String::from(&ctx.data().db.osu_info.lock().unwrap().1) };
         Ok(Self {
             osu : Osu::new(client_id, client_secret).await?
         })

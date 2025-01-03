@@ -20,3 +20,4 @@ shuttle-serenity = "0.49.0"
 rosu-v2 = { git = "https://github.com/MaxOhn/rosu-v2", branch = "lazer" }
 num-format = "0.4.4"
 tracing = "0.1"
+ollama-rs = {version = "0.2.2", features = ["stream", "function-calling", "chat-history", "default"]}
